@@ -165,6 +165,11 @@
       <div class="pool-info" id="poolInfo"></div>
       <textarea id="blessingText" spellcheck="false"></textarea>
       <div class="name-hint">Utilise {Nom} dans le texte : il sera remplacé automatiquement par le prénom de chaque destinataire à l'envoi.</div>
+      <div class="time-row" style="margin-top:12px;">
+        <label style="min-width:70px;color:#6B6156;">Signature</label>
+        <input type="text" id="signatureInput" value="Abdoulaye" style="flex:1;background:rgba(36,31,26,0.05);border:1px solid rgba(36,31,26,0.25);border-radius:8px;padding:8px 10px;font-size:13px;color:var(--charcoal);">
+      </div>
+      <div class="name-hint">Elle est ajoutée automatiquement à la fin de chaque message envoyé ou copié.</div>
       <div class="card-actions">
         <button class="btn-gold" onclick="nextFromPool()">✨ Suivante (sans répétition)</button>
         <button class="btn-ghost" onclick="copyBlessing()">Copier (générique)</button>
@@ -176,6 +181,9 @@
       <p>Choisis un groupe puis lance l'envoi : {Nom} est remplacé pour chaque personne, un tap "Ouvrir" suffit, et tu confirmes si l'envoi a réussi.</p>
       <select id="groupFilter" onchange="onGroupFilterChange()" style="margin-bottom:10px;width:100%;padding:9px;"></select>
       <button class="btn-big" onclick="startGuidedSend()">🚀 Envoyer au groupe sélectionné</button>
+      <button class="btn-ghost" style="width:100%;margin-top:8px;" onclick="openPickOverlay()">☑️ Ou choisir des proches précis</button>
+      <button class="btn-ghost" style="width:100%;margin-top:8px;" onclick="sendGroupSms()">⚡ SMS groupé : un seul message pour tout le groupe</button>
+      <p style="margin-top:10px;font-size:11px;color:#8B93AC;">SMS groupé = un seul tap, mais sans prénom ({Nom} devient « toi ») et, selon les réglages, les destinataires peuvent se voir entre eux. L'envoi guidé reste le plus personnel.</p>
     </div>
 
     <div class="footnote">
@@ -356,7 +364,7 @@
     <div id="sendHistList"></div>
   </div>
 
-  <div class="footnote" style="margin-top:26px;">Santé · version 2.1 — sauvegarde renforcée</div>
+  <div class="footnote" style="margin-top:26px;">Santé · version 2.2 — sélection libre & signature</div>
 </div>
 
 <div class="overlay" id="overlay">
@@ -374,6 +382,19 @@
         </div>
       </div>
       <button class="close-btn" onclick="closeOverlay()">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="pickOverlay">
+  <div class="modal" style="max-height:80vh;display:flex;flex-direction:column;">
+    <div class="progress">Sélection libre</div>
+    <div class="who" style="font-size:19px;">Choisis tes proches</div>
+    <div id="pickList" style="overflow-y:auto;text-align:left;margin:10px 0;flex:1;"></div>
+    <div class="step-actions">
+      <button class="confirm-ok" id="pickSendBtn" style="padding:13px;border-radius:10px;font-weight:700;font-size:14px;" onclick="startGuidedSendSelection()">🚀 Envoyer (0)</button>
+      <button class="next-btn" style="cursor:pointer;" onclick="clearSelection()">Tout décocher</button>
+      <button class="close-btn" onclick="closePickOverlay()">Fermer</button>
     </div>
   </div>
 </div>
@@ -511,6 +532,24 @@ function applyName(text, name){
   return text.split('{Nom}').join(name || 'toi');
 }
 
+/* ---------- Signature ajoutée à la fin de chaque message ---------- */
+let signature = 'Abdoulaye';
+function withSignature(text){
+  const s = (signature||'').trim();
+  return s ? text + '\n\n' + s : text;
+}
+async function loadSignature(){
+  try{
+    const r = await window.storage.get('signature', false);
+    if(r && typeof r.value === 'string') signature = r.value;
+  }catch(e){}
+  const inp = document.getElementById('signatureInput');
+  if(inp) inp.value = signature;
+}
+async function saveSignature(){
+  try{ await window.storage.set('signature', signature, false); }catch(e){}
+}
+
 let usedIndexes = { monday: [], friday: [] };
 async function loadUsed(){
   try{
@@ -573,7 +612,7 @@ function updatePoolInfo(){
     `Bibliothèque du ${key==='friday'?'vendredi':'lundi'} : ${used}/${pool.length} déjà utilisées ce cycle (rotation sans répétition).`;
 }
 function copyBlessing(){
-  const text = applyName(document.getElementById('blessingText').value, '');
+  const text = withSignature(applyName(document.getElementById('blessingText').value, ''));
   navigator.clipboard.writeText(text).then(()=>showToast('Texte copié ✓')).catch(()=>showToast("Impossible de copier"));
 }
 function showToast(msg){
@@ -686,7 +725,7 @@ async function restoreDefaultGroup(){
 function smsLink(phone, text){ return `sms:${cleanPhoneForSms(phone)}?&body=${encodeURIComponent(text)}`; }
 function waLink(phone, text){ return `https://wa.me/${cleanDigits(phone)}?text=${encodeURIComponent(text)}`; }
 function channelLink(c){
-  const personalized = applyName(document.getElementById('blessingText').value, c.name);
+  const personalized = withSignature(applyName(document.getElementById('blessingText').value, c.name));
   return c.channel === 'wa' ? waLink(c.phone, personalized) : smsLink(c.phone, personalized);
 }
 
@@ -880,14 +919,66 @@ function importXLSX(evt){
 /* ---------- Guided send with real confirmation ---------- */
 let guidedIndex = 0, overlayOpen = false, guidedList = [];
 
-function startGuidedSend(){
-  const gid = document.getElementById('groupFilter').value;
-  guidedList = gid === 'all' ? contacts : contacts.filter(c=>c.groupId===gid);
-  if(guidedList.length === 0){ showToast("Aucun proche dans ce groupe"); return; }
+function launchGuidedSend(list){
+  guidedList = list;
+  if(guidedList.length === 0){ showToast("Aucun proche dans cette liste"); return; }
   guidedIndex = 0;
   overlayOpen = true;
   showGuidedStep();
   document.getElementById('overlay').classList.add('show');
+}
+function startGuidedSend(){
+  const gid = document.getElementById('groupFilter').value;
+  launchGuidedSend(gid === 'all' ? contacts.slice() : contacts.filter(c=>c.groupId===gid));
+}
+
+/* --- Sélection libre de proches --- */
+function openPickOverlay(){
+  if(contacts.length===0){ showToast("Ajoute d'abord des proches dans l'onglet 👥"); return; }
+  renderPickList();
+  document.getElementById('pickOverlay').classList.add('show');
+}
+function closePickOverlay(){ document.getElementById('pickOverlay').classList.remove('show'); }
+function renderPickList(){
+  const el = document.getElementById('pickList');
+  el.innerHTML = contacts.map((c,i)=>`
+    <div class="row" style="cursor:pointer;background:${c.selected?'rgba(217,164,65,0.3)':'rgba(36,31,26,0.05)'};border-color:${c.selected?'var(--gold)':'rgba(36,31,26,0.15)'};" onclick="togglePick(${i})">
+      <div class="row-name" style="color:var(--charcoal);">${c.selected?'✅':'⬜'} ${escapeHtml(c.name)}</div>
+      <div class="row-sub" style="color:#6B6156;">${c.channel==='wa'?'WhatsApp':'SMS'} · ${escapeHtml(groupName(c.groupId))}</div>
+    </div>
+  `).join('');
+  const n = contacts.filter(c=>c.selected).length;
+  document.getElementById('pickSendBtn').textContent = `🚀 Envoyer (${n})`;
+}
+async function togglePick(i){
+  contacts[i].selected = !contacts[i].selected;
+  await saveContacts();
+  renderPickList();
+}
+async function clearSelection(){
+  contacts.forEach(c=>c.selected=false);
+  await saveContacts();
+  renderPickList();
+}
+function startGuidedSendSelection(){
+  const list = contacts.filter(c=>c.selected);
+  if(list.length===0){ showToast('Coche au moins un proche'); return; }
+  closePickOverlay();
+  launchGuidedSend(list);
+}
+
+/* --- SMS groupé : un seul message pour tout le groupe --- */
+function sendGroupSms(){
+  const gid = document.getElementById('groupFilter').value;
+  let list = gid === 'all' ? contacts.slice() : contacts.filter(c=>c.groupId===gid);
+  const waCount = list.filter(c=>c.channel==='wa').length;
+  list = list.filter(c=>c.channel!=='wa');
+  if(list.length===0){ showToast("Aucun proche en SMS dans ce groupe (WhatsApp n'accepte pas l'envoi groupé par lien)"); return; }
+  const text = withSignature(applyName(document.getElementById('blessingText').value, ''));
+  const numbers = list.map(c=>cleanPhoneForSms(c.phone)).join(',');
+  list.forEach(c=>logSend(c.name, 'sms', 'ouvert'));
+  if(waCount>0) showToast(`${waCount} proche(s) WhatsApp non inclus — utilise l'envoi guidé pour eux`);
+  window.location.href = `sms:${numbers}?&body=${encodeURIComponent(text)}`;
 }
 function showGuidedStep(){
   const c = guidedList[guidedIndex];
@@ -1388,12 +1479,12 @@ function renderArticleSearch(){
 /* ---------- Sauvegarde minutieuse ---------- */
 const DATA_KEYS = ['contacts','groups','solarClients','solarLines','solarPayments',
   'shoppingList','taskList','libMonday','libFriday','waterLog','sendLog','usedIndexes',
-  'waterPrefs','defaultGroup','trash','currentBlessing'];
+  'waterPrefs','defaultGroup','trash','currentBlessing','signature'];
 const KEY_TYPES = {
   contacts:'array', groups:'array', solarClients:'array', solarLines:'array', solarPayments:'array',
   shoppingList:'array', taskList:'array', libMonday:'array', libFriday:'array',
   waterLog:'array', sendLog:'array', trash:'array',
-  usedIndexes:'object', waterPrefs:'object', currentBlessing:'object', defaultGroup:'string'
+  usedIndexes:'object', waterPrefs:'object', currentBlessing:'object', defaultGroup:'string', signature:'string'
 };
 function typeOk(key, val){
   const t = KEY_TYPES[key];
@@ -1408,7 +1499,7 @@ async function collectAllData(){
     try{
       const r = await window.storage.get(key, false);
       if(r && r.value){
-        data[key] = key==='defaultGroup' ? r.value : JSON.parse(r.value);
+        data[key] = (key==='defaultGroup' || key==='signature') ? r.value : JSON.parse(r.value);
       }else data[key] = null;
     }catch(e){ data[key] = null; }
   }
@@ -1439,7 +1530,7 @@ function sanitizeBackupData(raw){
 async function writeBackupData(data){
   for(const key of DATA_KEYS){
     if(data[key]!==undefined && data[key]!==null){
-      const value = key==='defaultGroup' ? data[key] : JSON.stringify(data[key]);
+      const value = (key==='defaultGroup' || key==='signature') ? data[key] : JSON.stringify(data[key]);
       await window.storage.set(key, value, false);
     }
   }
@@ -1782,6 +1873,7 @@ async function init(){
   document.querySelectorAll('[data-libday]').forEach(t=>t.classList.toggle('active', t.dataset.libday===libDay));
   renderLibrary();
   await loadAll();
+  await loadSignature();
   await loadPrefs();
   await loadChecklists();
   await loadSolarData();
@@ -1796,6 +1888,14 @@ async function init(){
     blessingSaveTimer = setTimeout(()=>{
       saveCurrentBlessing(document.getElementById('blessingText').value);
     }, 600);
+  });
+  const sigInput = document.getElementById('signatureInput');
+  let sigTimer = null;
+  sigInput.addEventListener('input', ()=>{
+    signature = sigInput.value;
+    clearTimeout(sigTimer);
+    sigTimer = setTimeout(saveSignature, 600);
+    renderContacts();
   });
 }
 init();
