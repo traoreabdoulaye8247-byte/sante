@@ -1,0 +1,1497 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Santé 🥃</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root{
+    --ink:#16213E; --ink-deep:#0F1730; --gold:#D9A441; --gold-soft:#EFCB7C;
+    --ivory:#F6F1E4; --rose:#B5654F; --charcoal:#241F1A; --wa:#3FA772; --blue:#4E86C6;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:linear-gradient(180deg,var(--ink-deep) 0%,var(--ink) 55%,#22315C 100%);
+    font-family:'Work Sans',sans-serif;color:var(--ivory);min-height:100vh;padding:22px 16px 70px;}
+  .wrap{max-width:520px;margin:0 auto;}
+  .eyebrow{text-transform:uppercase;letter-spacing:0.18em;font-size:11px;color:var(--gold-soft);font-weight:600;margin-bottom:6px;}
+  h1{font-family:'Fraunces',serif;font-weight:600;font-size:28px;margin:0 0 4px;line-height:1.1;}
+  .subtitle{color:#B9C0D6;font-size:13px;margin-bottom:16px;}
+  .sunrise{height:3px;border-radius:3px;background:linear-gradient(90deg,var(--rose),var(--gold),var(--gold-soft));margin-bottom:18px;}
+
+  .tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:20px;}
+  .tab{padding:14px 6px;border-radius:14px;font-size:12px;font-weight:600;background:rgba(246,241,228,0.08);
+    color:#B9C0D6;cursor:pointer;text-align:center;display:flex;flex-direction:column;align-items:center;gap:4px;}
+  .tab .tab-icon{font-size:22px;}
+  .tab.active{background:var(--gold);color:var(--ink-deep);}
+  .panel{display:none;}
+  .panel.active{display:block;}
+
+  .card{background:var(--ivory);color:var(--charcoal);border-radius:14px;padding:20px 18px;position:relative;
+    box-shadow:0 12px 30px rgba(0,0,0,0.25);margin-bottom:18px;}
+  .ribbon{position:absolute;top:-2px;left:20px;width:22px;height:34px;background:var(--rose);
+    clip-path:polygon(0 0,100% 0,100% 100%,50% 78%,0 100%);}
+  .day-tag{font-family:'Fraunces',serif;font-style:italic;font-size:13px;color:var(--rose);margin-bottom:8px;display:block;}
+  textarea{width:100%;min-height:120px;font-family:'Fraunces',serif;font-size:17px;line-height:1.5;
+    color:var(--charcoal);border:none;background:transparent;resize:vertical;padding:0;}
+  textarea:focus{outline:none;}
+  .card-actions{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;}
+  button{font-family:'Work Sans',sans-serif;font-weight:600;font-size:13px;border:none;border-radius:9px;
+    padding:10px 14px;cursor:pointer;transition:transform .12s ease, opacity .12s ease;}
+  button:active{transform:scale(0.97);}
+  .btn-gold{background:var(--gold);color:var(--ink-deep);}
+  .btn-ghost{background:transparent;color:var(--rose);border:1.5px solid var(--rose);}
+  .btn-big{background:var(--gold);color:var(--ink-deep);width:100%;padding:14px;font-size:15px;border-radius:12px;}
+  .pool-info{font-size:11px;color:#8B93AC;margin-bottom:8px;}
+  .name-hint{font-size:11px;color:var(--rose);margin-top:8px;}
+
+  h2{font-family:'Fraunces',serif;font-weight:600;font-size:18px;margin:0 0 4px;}
+  .section-sub{color:#B9C0D6;font-size:13px;margin-bottom:14px;}
+
+  .row{display:flex;align-items:center;justify-content:space-between;background:rgba(246,241,228,0.06);
+    border:1px solid rgba(246,241,228,0.12);border-radius:10px;padding:10px 12px;margin-bottom:8px;flex-wrap:wrap;gap:6px;}
+  .row-name{font-weight:600;font-size:14px;}
+  .row-sub{font-size:12px;color:#B9C0D6;}
+  .row-actions{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+  .icon-btn{background:rgba(217,164,65,0.16);color:var(--gold-soft);border-radius:8px;padding:8px 10px;
+    font-size:12px;text-decoration:none;border:none;cursor:pointer;}
+  .icon-btn.wa{background:rgba(63,167,114,0.18);color:#8FD9AE;}
+  .icon-btn.danger{background:rgba(181,101,79,0.18);color:#E3A392;}
+  .icon-btn.blue{background:rgba(78,134,198,0.18);color:#9FC0E8;}
+  .channel-toggle{display:flex;gap:4px;background:rgba(246,241,228,0.08);border-radius:8px;padding:2px;}
+  .channel-toggle button{padding:5px 8px;font-size:11px;border-radius:6px;background:transparent;color:#B9C0D6;}
+  .channel-toggle button.on{background:var(--gold);color:var(--ink-deep);}
+  .channel-toggle button.on.wa-on{background:var(--wa);color:#fff;}
+  select,input[type=time]{background:rgba(246,241,228,0.08);border:1px solid rgba(246,241,228,0.2);border-radius:8px;
+    color:var(--ivory);font-size:12px;padding:6px 8px;}
+  select option{color:#000;}
+
+  .add-form{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;}
+  .add-form input{flex:1;min-width:100px;background:rgba(246,241,228,0.08);border:1px solid rgba(246,241,228,0.2);
+    border-radius:9px;padding:10px 12px;color:var(--ivory);font-size:14px;}
+  .add-form input::placeholder{color:#8B93AC;}
+
+  .empty{font-size:13px;color:#8B93AC;padding:14px 0;text-align:center;font-style:italic;}
+
+  .send-all-box{background:rgba(217,164,65,0.1);border:1px solid rgba(217,164,65,0.35);border-radius:14px;
+    padding:16px;margin:18px 0;text-align:center;}
+  .send-all-box p{font-size:12.5px;color:#D8DCEA;margin:6px 0 12px;line-height:1.5;}
+
+  .water-card{text-align:center;}
+  .water-drop{font-size:44px;margin-bottom:6px;}
+  .water-msg{font-family:'Fraunces',serif;font-size:16px;line-height:1.5;margin-bottom:16px;}
+  .water-actions{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
+  .water-actions button{padding:11px 14px;border-radius:10px;font-size:13px;}
+  .btn-drunk{background:#5B9E6F;color:#fff;}
+  .btn-snooze{background:#E8C170;color:var(--ink-deep);}
+  .btn-skip{background:transparent;border:1.5px solid #B5654F;color:#B5654F;}
+  .water-count{font-size:12px;color:#B9C0D6;margin-top:14px;}
+
+  .prefs-box{background:rgba(246,241,228,0.06);border:1px solid rgba(246,241,228,0.12);border-radius:12px;padding:14px;margin-top:16px;}
+  .day-chips{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0;}
+  .day-chip{padding:6px 10px;border-radius:16px;font-size:12px;background:rgba(246,241,228,0.08);color:#B9C0D6;cursor:pointer;}
+  .day-chip.on{background:var(--gold);color:var(--ink-deep);}
+  .time-row{display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap;}
+  .time-row label{font-size:12px;color:#B9C0D6;min-width:70px;}
+
+  .overlay{position:fixed;inset:0;background:rgba(15,23,48,0.92);display:none;align-items:center;justify-content:center;
+    padding:20px;z-index:50;}
+  .overlay.show{display:flex;}
+  .modal{background:var(--ivory);color:var(--charcoal);border-radius:16px;padding:26px 22px;max-width:380px;width:100%;text-align:center;}
+  .modal .progress{font-size:12px;color:var(--rose);font-weight:600;margin-bottom:10px;letter-spacing:0.06em;text-transform:uppercase;}
+  .modal .who{font-family:'Fraunces',serif;font-size:24px;margin-bottom:4px;}
+  .modal .via{font-size:13px;color:#6B6156;margin-bottom:18px;}
+  .modal .step-actions{display:flex;flex-direction:column;gap:10px;}
+  .modal a.open-link, .modal button.next-btn, .modal button.confirm-btn{display:block;text-decoration:none;padding:13px;border-radius:10px;font-weight:700;font-size:14px;border:none;}
+  .modal a.open-link{background:var(--gold);color:var(--ink-deep);}
+  .modal a.open-link.wa{background:var(--wa);color:#fff;}
+  .modal button.next-btn{background:transparent;border:1.5px solid var(--rose);color:var(--rose);}
+  .modal button.confirm-ok{background:#5B9E6F;color:#fff;}
+  .modal button.confirm-fail{background:transparent;border:1.5px solid #B5654F;color:#B5654F;}
+  .modal .confirm-row{display:flex;gap:8px;}
+  .modal .confirm-row button{flex:1;}
+  .modal button.close-btn{background:none;border:none;color:#8B93AC;font-size:12px;margin-top:14px;text-decoration:underline;cursor:pointer;}
+  .modal .ask{font-size:13px;color:#6B6156;margin-bottom:10px;}
+
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--gold);color:var(--ink-deep);
+    padding:10px 18px;border-radius:20px;font-size:13px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .25s ease;}
+  .toast.show{opacity:1;}
+  .footnote{font-size:12px;color:#7C84A0;text-align:center;margin-top:20px;line-height:1.5;}
+
+  .hist-item{background:rgba(246,241,228,0.06);border:1px solid rgba(246,241,228,0.12);border-radius:10px;
+    padding:10px 12px;margin-bottom:8px;font-size:13px;}
+  .hist-item .hd{display:flex;justify-content:space-between;font-size:11px;color:#B9C0D6;margin-bottom:4px;}
+  .hist-tag{padding:2px 7px;border-radius:10px;font-size:10px;font-weight:700;}
+  .hist-tag.ok{background:rgba(91,158,111,0.25);color:#8FD9AE;}
+  .hist-tag.warn{background:rgba(232,193,112,0.25);color:#E8C170;}
+  .hist-tag.bad{background:rgba(181,101,79,0.25);color:#E3A392;}
+
+  .file-btn{display:inline-block;background:rgba(78,134,198,0.16);color:#9FC0E8;border-radius:9px;padding:9px 12px;
+    font-size:12px;font-weight:600;cursor:pointer;margin-top:10px;margin-right:8px;}
+  .file-btn input{display:none;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">Santé 🥃</div>
+  <h1>Bénédictions & Bien-être</h1>
+  <div class="subtitle">Rappels d'eau, bénédictions du jour, proches et historique.</div>
+  <div class="sunrise"></div>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="bless" onclick="switchTab('bless')"><span class="tab-icon">🙏</span><span>Bénédictions</span></div>
+    <div class="tab" data-tab="water" onclick="switchTab('water')"><span class="tab-icon">💧</span><span>Eau</span></div>
+    <div class="tab" data-tab="contacts" onclick="switchTab('contacts')"><span class="tab-icon">👥</span><span>Proches</span></div>
+    <div class="tab" data-tab="solaire" onclick="switchTab('solaire')"><span class="tab-icon">☀️</span><span>Solaire</span></div>
+    <div class="tab" data-tab="hist" onclick="switchTab('hist')"><span class="tab-icon">📜</span><span>Historique</span></div>
+    <div class="tab" data-tab="tout" onclick="switchTab('tout')"><span class="tab-icon">🗂</span><span>Tout</span></div>
+  </div>
+
+  <!-- BÉNÉDICTIONS -->
+  <div class="panel active" id="panel-bless">
+    <div class="card">
+      <div class="ribbon"></div>
+      <span class="day-tag" id="dayTag">Aujourd'hui</span>
+      <div class="pool-info" id="poolInfo"></div>
+      <textarea id="blessingText" spellcheck="false"></textarea>
+      <div class="name-hint">Utilise {Nom} dans le texte : il sera remplacé automatiquement par le prénom de chaque destinataire à l'envoi.</div>
+      <div class="card-actions">
+        <button class="btn-gold" onclick="nextFromPool()">✨ Suivante (sans répétition)</button>
+        <button class="btn-ghost" onclick="copyBlessing()">Copier (générique)</button>
+      </div>
+    </div>
+
+    <div class="send-all-box">
+      <h2 style="margin-bottom:2px;">Envoi guidé automatique</h2>
+      <p>Choisis un groupe puis lance l'envoi : {Nom} est remplacé pour chaque personne, un tap "Ouvrir" suffit, et tu confirmes si l'envoi a réussi.</p>
+      <select id="groupFilter" onchange="onGroupFilterChange()" style="margin-bottom:10px;width:100%;padding:9px;"></select>
+      <button class="btn-big" onclick="startGuidedSend()">🚀 Envoyer au groupe sélectionné</button>
+    </div>
+
+    <div class="footnote">
+      Bibliothèque de bénédictions générales rédigées dans l'esprit islamique. Un seul verset coranique très connu et vérifié est inclus (2:201) ; le reste évite volontairement les citations précises pour ne rien mal attribuer. Fais valider par une personne compétente avant d'ajouter des versets/douâ supplémentaires.
+    </div>
+
+    <h2 style="margin-top:22px;">📚 Gérer la bibliothèque</h2>
+    <div class="section-sub">Recherche, modifie ou supprime les messages lundi/vendredi.</div>
+    <div class="tabs" style="grid-template-columns:1fr 1fr;margin-bottom:10px;">
+      <div class="tab active" data-libday="monday" onclick="switchLibDay('monday')" style="padding:9px 6px;">Lundi</div>
+      <div class="tab" data-libday="friday" onclick="switchLibDay('friday')" style="padding:9px 6px;">Vendredi</div>
+    </div>
+    <input type="text" id="libSearch" placeholder="Rechercher un message..." oninput="renderLibrary()"
+      style="width:100%;padding:10px 12px;border-radius:9px;background:rgba(246,241,228,0.08);border:1px solid rgba(246,241,228,0.2);color:var(--ivory);font-size:13px;margin-bottom:10px;">
+    <div id="libraryList"></div>
+    <div class="add-form">
+      <input type="text" id="newLibMessage" placeholder="Nouveau message (utilise {Nom})">
+      <button class="btn-gold" onclick="addLibMessage()">Ajouter</button>
+    </div>
+  </div>
+
+  <!-- EAU -->
+  <div class="panel" id="panel-water">
+    <div class="card water-card">
+      <div class="water-drop">💧</div>
+      <div class="water-msg" id="waterMsg">Bonjour, n'oublie pas de boire de l'eau 💧.<br>Qu'Allah t'accorde une excellente santé et une longue vie. Âmîn.</div>
+      <div class="water-actions">
+        <button class="btn-drunk" onclick="logWater('bu')">✅ J'ai bu</button>
+        <button class="btn-snooze" onclick="logWater('reporte')">⏰ Reporter 10 min</button>
+        <button class="btn-skip" onclick="logWater('ignore')">❌ Ignorer</button>
+      </div>
+      <div class="water-count" id="waterCount"></div>
+    </div>
+
+    <div class="prefs-box">
+      <h2 style="margin-bottom:6px;">Mes horaires souhaités</h2>
+      <div class="section-sub">Réglé ici pour référence — dis-le-moi ensuite dans le chat pour que je mette à jour tes vrais rappels iPhone (le web ne peut pas les modifier directement).</div>
+      <div class="day-chips" id="dayChips"></div>
+      <div class="time-row"><label>Matin</label><input type="time" id="timeMatin" value="08:00"></div>
+      <div class="time-row"><label>Midi</label><input type="time" id="timeMidi" value="12:30"></div>
+      <div class="time-row"><label>Soir</label><input type="time" id="timeSoir" value="18:00"></div>
+      <button class="btn-gold" onclick="savePrefs()">Enregistrer mes préférences</button>
+    </div>
+
+    <div class="footnote">
+      Recommandation générale : environ 1,5 à 2 litres d'eau par jour (6-8 verres), à adapter selon ton activité et la chaleur.
+    </div>
+  </div>
+
+  <!-- CONTACTS -->
+  <div class="panel" id="panel-contacts">
+    <h2>Groupes</h2>
+    <div class="section-sub">Famille, Amis, Clients, Association…</div>
+    <div id="groupList"></div>
+    <div class="add-form">
+      <input type="text" id="newGroupName" placeholder="Nom du groupe">
+      <button class="btn-gold" onclick="addGroup()">Ajouter</button>
+    </div>
+
+    <h2 style="margin-top:22px;">Mes proches</h2>
+    <div class="section-sub">Canal (SMS/WhatsApp) et groupe pour chacun.</div>
+    <input type="text" id="contactSearchInput" placeholder="Rechercher un proche (nom ou numéro)..." oninput="onContactSearch(this.value)"
+      style="width:100%;padding:10px 12px;border-radius:9px;background:rgba(246,241,228,0.08);border:1px solid rgba(246,241,228,0.2);color:var(--ivory);font-size:13px;margin-bottom:10px;">
+    <div id="contactList"></div>
+
+    <div class="add-form">
+      <input type="text" id="newName" placeholder="Prénom (ex: Maman)">
+      <input type="tel" id="newPhone" placeholder="Numéro (+225...)">
+      <button class="btn-gold" onclick="addContact()">Ajouter</button>
+    </div>
+
+    <label class="file-btn">
+      📥 Importer CSV
+      <input type="file" accept=".csv" onchange="importCSV(event)">
+    </label>
+    <label class="file-btn">
+      📊 Importer Excel (.xlsx)
+      <input type="file" accept=".xlsx,.xls" onchange="importXLSX(event)">
+    </label>
+    <div class="footnote" style="text-align:left;">
+      Colonnes attendues (CSV ou Excel) : <code>Nom, Téléphone, Groupe</code> — une ligne par contact, avec ou sans en-tête.
+    </div>
+  </div>
+
+  <!-- TOUT -->
+  <div class="panel" id="panel-tout">
+    <h2>📅 Programme du jour</h2>
+    <div class="section-sub">Référence de tes rappels iPhone (non modifiable ici — pour les changer, demande-moi dans le chat).</div>
+    <div class="row"><div class="row-name">🕌 Fajr</div><div class="row-sub">4h55</div></div>
+    <div class="row"><div class="row-name">💧 Eau (matin)</div><div class="row-sub">8h00</div></div>
+    <div class="row"><div class="row-name">🕌 Dhuhr</div><div class="row-sub">13h30</div></div>
+    <div class="row"><div class="row-name">💧 Eau (midi)</div><div class="row-sub">12h30</div></div>
+    <div class="row"><div class="row-name">🕌 Asr</div><div class="row-sub">16h02</div></div>
+    <div class="row"><div class="row-name">💧 Eau (soir)</div><div class="row-sub">18h00</div></div>
+    <div class="row"><div class="row-name">🕌 Maghrib</div><div class="row-sub">19h02</div></div>
+    <div class="row"><div class="row-name">🙏 Bénédiction</div><div class="row-sub">Lun/Ven 6h00</div></div>
+    <div class="row"><div class="row-name">🕌 Isha</div><div class="row-sub">20h15</div></div>
+    <div class="row"><div class="row-name">🌙 Avant de dormir</div><div class="row-sub">22h30</div></div>
+
+    <h2 style="margin-top:22px;">🛒 Courses</h2>
+    <div class="section-sub">Liste indépendante, gérée ici (pas liée à l'app Rappels). Tape sur 🔔 Rappel pour générer un vrai fichier calendrier (.ics) avec alarme — ouvre-le une fois pour l'ajouter à ton Calendrier iPhone.</div>
+    <div id="shoppingList"></div>
+    <div class="add-form">
+      <input type="text" id="newShoppingItem" placeholder="Article (ex: Riz, oignons...)">
+      <button class="btn-gold" onclick="addShoppingItem()">Ajouter</button>
+    </div>
+
+    <h2 style="margin-top:22px;">✅ Autres tâches</h2>
+    <div class="section-sub">Pour tout le reste que tu veux suivre ici.</div>
+    <div id="taskList"></div>
+    <div class="add-form">
+      <input type="text" id="newTask" placeholder="Nouvelle tâche">
+      <button class="btn-gold" onclick="addTask()">Ajouter</button>
+    </div>
+
+    <h2 style="margin-top:22px;">💾 Sauvegarde & restauration</h2>
+    <div class="section-sub">Exporte toutes tes données (contacts, comptes clients, bibliothèque...) dans un fichier, pour les restaurer plus tard ou sur un autre appareil.</div>
+    <div class="card-actions">
+      <button class="btn-gold" onclick="exportAllData()">⬇️ Exporter mes données</button>
+      <label class="file-btn" style="margin:0;">
+        ⬆️ Restaurer depuis un fichier
+        <input type="file" accept=".json" onchange="importAllData(event)">
+      </label>
+    </div>
+
+    <h2 style="margin-top:22px;">🗑 Corbeille</h2>
+    <div class="section-sub">Clients et contacts supprimés — récupérables tant qu'ils sont ici.</div>
+    <div id="trashList"></div>
+  </div>
+
+  <!-- SOLAIRE -->
+  <div class="panel" id="panel-solaire">
+    <h2>☀️ Comptes clients — Solaire</h2>
+    <div class="section-sub">Un compte par client, avec ses produits (quantité × prix) et son solde.</div>
+
+    <div class="row" style="background:rgba(217,164,65,0.12);border-color:rgba(217,164,65,0.3);">
+      <div><div class="row-name">💰 Bénéfice total (tous clients)</div></div>
+      <div class="row-name" id="sumProfit" style="color:var(--gold-soft);">0 FCFA</div>
+    </div>
+    <div class="row" style="background:rgba(63,167,114,0.1);border-color:rgba(63,167,114,0.3);">
+      <div><div class="row-name">👤 Total que les clients doivent</div></div>
+      <div class="row-name" id="sumClientDue" style="color:#8FD9AE;">0 FCFA</div>
+    </div>
+    <div class="row" style="background:rgba(181,101,79,0.1);border-color:rgba(181,101,79,0.3);">
+      <div><div class="row-name">🚚 Total dû aux fournisseurs</div></div>
+      <div class="row-name" id="sumSupplierDue" style="color:#E3A392;">0 FCFA</div>
+    </div>
+
+    <h2 style="margin-top:20px;">Clients</h2>
+    <input type="text" id="clientSearchInput" placeholder="Rechercher un client..." oninput="renderClientPicker()"
+      style="width:100%;padding:10px 12px;border-radius:9px;background:rgba(246,241,228,0.08);border:1px solid rgba(246,241,228,0.2);color:var(--ivory);font-size:13px;margin-bottom:10px;">
+    <div id="clientPicker"></div>
+    <div class="add-form">
+      <input type="text" id="newClientName" placeholder="Nom du nouveau client">
+      <button class="btn-gold" onclick="addSolarClient()">Ajouter</button>
+    </div>
+
+    <div id="clientAccount" style="margin-top:22px;"></div>
+
+    <h2 style="margin-top:26px;">🔍 Tous les articles vendus</h2>
+    <div class="section-sub">Recherche un produit (ex: "fil") pour voir tout ce qui a été vendu, tous clients confondus.</div>
+    <input type="text" id="articleSearchInput" placeholder="Rechercher un article..." oninput="renderArticleSearch()"
+      style="width:100%;padding:10px 12px;border-radius:9px;background:rgba(246,241,228,0.08);border:1px solid rgba(246,241,228,0.2);color:var(--ivory);font-size:13px;margin-bottom:10px;">
+    <div id="articleSearchResults"></div>
+  </div>
+
+  <!-- HISTORIQUE -->
+  <div class="panel" id="panel-hist">
+    <h2>Eau</h2>
+    <div id="waterHistList"></div>
+    <h2 style="margin-top:18px;">Envois de bénédictions</h2>
+    <div id="sendHistList"></div>
+  </div>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="progress" id="modalProgress">1 / 1</div>
+    <div class="who" id="modalWho">Nom</div>
+    <div class="via" id="modalVia">via SMS</div>
+    <div class="step-actions">
+      <a class="open-link" id="modalOpenLink" href="#" onclick="handleOpenClick()">Ouvrir & préparer l'envoi</a>
+      <div id="confirmBlock" style="display:none;">
+        <div class="ask">As-tu envoyé le message ?</div>
+        <div class="confirm-row">
+          <button class="confirm-ok" onclick="confirmSend(true)">✅ Envoyé</button>
+          <button class="confirm-fail" onclick="confirmSend(false)">❌ Pas envoyé</button>
+        </div>
+      </div>
+      <button class="close-btn" onclick="closeOverlay()">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<button id="fab" onclick="startGuidedSend()" style="position:fixed;bottom:24px;right:20px;width:58px;height:58px;border-radius:50%;
+  background:var(--gold);color:var(--ink-deep);font-size:24px;box-shadow:0 8px 20px rgba(0,0,0,0.35);z-index:40;">🚀</button>
+
+<script>
+/* ---------- Tabs ---------- */
+function switchTab(name){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.tab===name));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('panel-'+name).classList.add('active');
+  if(name==='hist') renderHistory();
+}
+
+/* ---------- Blessing library ({Nom} placeholder, general wording) ---------- */
+let mondayBlessings = [
+  "Bonjour {Nom}, que ce lundi t'apporte force, paix et de belles opportunités. Je pense à toi et te souhaite une merveilleuse semaine 🙏",
+  "{Nom}, bon début de semaine ! Que la lumière et le courage t'accompagnent dans tout ce que tu entreprends.",
+  "Que Dieu bénisse ta semaine {Nom}, guide tes pas et t'entoure de sa protection dès aujourd'hui.",
+  "{Nom}, un nouveau lundi, une nouvelle grâce. Que cette semaine soit remplie de belles surprises pour toi.",
+  "Que ton lundi commence avec espoir et se termine avec gratitude, {Nom}. Belle semaine à toi 💛",
+  "{Nom}, je prie pour que cette semaine t'apporte santé, réussite et sérénité dans tout ce que tu fais.",
+  "Que cette nouvelle semaine t'apporte la sagesse pour avancer et la paix pour tenir bon, {Nom}.",
+  "Lundi béni, {Nom} ! Que chaque effort que tu fais cette semaine porte du fruit en son temps.",
+  "Que la faveur divine te précède partout où tu iras cette semaine, {Nom}. Courage et force à toi 🙏",
+  "{Nom}, un cœur reconnaissant attire encore plus de grâce. Que ta semaine commence dans la gratitude.",
+  "Que la protection divine te couvre {Nom}, toi et les tiens, tout au long de cette semaine.",
+  "{Nom}, nouvelle semaine, nouvelle grâce, nouvelles bénédictions. Je te souhaite le meilleur, dès aujourd'hui.",
+  "Que cette semaine t'apporte la baraka dans ton travail, ta famille et ta santé, {Nom}.",
+  "{Nom}, que chaque journée de cette semaine soit couverte de bienveillance et de bonnes nouvelles.",
+  "Je souhaite que ta semaine soit légère, productive et pleine de petites joies, {Nom}.",
+  "Que la patience et la paix intérieure t'accompagnent à chaque étape de cette semaine, {Nom}.",
+  "Que ce lundi marque le début d'une semaine bénie, remplie de réussite et de sérénité, {Nom}.",
+  "Que Dieu t'accorde la force nécessaire pour affronter cette semaine avec le sourire, {Nom}.",
+  "Une pensée sincère pour toi ce matin, {Nom} : que ta semaine soit portée par la grâce et la réussite.",
+  "Que cette semaine t'apporte tout ce dont tu as besoin, au moment où tu en as besoin, {Nom}.",
+  "{Nom}, que ce début de semaine t'apporte clarté d'esprit et motivation pour atteindre tes objectifs.",
+  "Que la bénédiction accompagne chacun de tes pas cette semaine, {Nom}, et que la réussite te suive.",
+];
+let fridayBlessings = [
+  "{Nom}, une semaine s'achève, portée par la grâce. Merci pour tout ce que tu as accompli — que ton week-end soit un vrai repos pour le corps et pour le cœur, entouré de paix et d'amour.",
+  "Bon vendredi {Nom} ! Que cette fin de semaine soit remplie de joie, de repos et de bénédictions. Prends soin de toi, tu le mérites 💛",
+  "Que Dieu te comble de sa paix profonde en ce vendredi {Nom}, et t'offre un week-end de repos mérité, loin de toute agitation.",
+  "Merci pour cette semaine {Nom}, pour ta persévérance et tes efforts. Que ton week-end soit béni, rempli de douceur et de temps précieux avec les tiens.",
+  "Que la joie du vendredi t'accompagne jusqu'au bout du week-end {Nom}, et que la gratitude remplisse ton cœur pour tout ce qui a été accompli.",
+  "En ce vendredi, je prie pour que tu ressentes, {Nom}, une présence bienveillante, un repos véritable, et une paix qui dépasse toute agitation.",
+  "La semaine se termine {Nom}, mais la grâce continue. Que ce week-end t'apporte guérison, réconfort et de beaux moments partagés.",
+  "Que chaque fardeau porté cette semaine soit déposé ce soir {Nom}, et que tu entres dans ce week-end léger, apaisé et profondément béni.",
+  "Vendredi béni {Nom} : que ce jour soit pour toi source de paix, de miséricorde et de bénédictions, et que ta famille soit protégée et ta subsistance élargie.",
+  "Que ce vendredi t'apporte la sérénité {Nom}, et que ton week-end soit rempli de gratitude pour les bienfaits reçus cette semaine.",
+  "{Nom}, Rabbana atina fid-dunya hasanatan wa fil akhirati hasanatan wa qina adhaban-nar — « Seigneur, accorde-nous belle part ici-bas et belle part dans l'au-delà, et préserve-nous du châtiment du Feu » (Coran 2:201). Bon vendredi béni à toi.",
+  "Que ce vendredi soit pour toi une pause bienvenue {Nom}, un moment de gratitude, et le début d'un week-end paisible et heureux.",
+  "{Nom}, que cette fin de semaine t'offre l'occasion de te reconnecter à l'essentiel : ta foi, ta famille, ton repos.",
+  "Que la miséricorde de ce vendredi enveloppe ta maison {Nom}, et que ton week-end soit exempt de soucis.",
+];
+const defaultMondayBlessings = mondayBlessings.slice();
+const defaultFridayBlessings = fridayBlessings.slice();
+async function loadLibrary(){
+  try{
+    const rm = await window.storage.get('libMonday', false);
+    if(rm && rm.value) mondayBlessings = JSON.parse(rm.value);
+  }catch(e){}
+  try{
+    const rf = await window.storage.get('libFriday', false);
+    if(rf && rf.value) fridayBlessings = JSON.parse(rf.value);
+  }catch(e){}
+}
+async function saveLibrary(key){
+  try{
+    if(key==='monday') await window.storage.set('libMonday', JSON.stringify(mondayBlessings), false);
+    else await window.storage.set('libFriday', JSON.stringify(fridayBlessings), false);
+  }catch(e){ showToast('Erreur de sauvegarde'); }
+}
+
+let currentPool = [];
+function getPoolKeyForToday(){ return new Date().getDay() === 5 ? 'friday' : 'monday'; }
+function getPoolForToday(){ return getPoolKeyForToday()==='friday' ? fridayBlessings : mondayBlessings; }
+function dayLabel(){
+  const names = ["Dimanche","Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi"];
+  return names[new Date().getDay()];
+}
+function applyName(text, name){
+  return text.split('{Nom}').join(name || 'toi');
+}
+
+let usedIndexes = { monday: [], friday: [] };
+async function loadUsed(){
+  try{
+    const res = await window.storage.get('usedIndexes', false);
+    if(res && res.value) usedIndexes = JSON.parse(res.value);
+  }catch(e){}
+}
+async function saveUsed(){
+  try{ await window.storage.set('usedIndexes', JSON.stringify(usedIndexes), false); }catch(e){}
+}
+
+function nextFromPool(){
+  const key = getPoolKeyForToday();
+  const pool = getPoolForToday();
+  let used = usedIndexes[key] || [];
+  let available = pool.map((_,i)=>i).filter(i=>!used.includes(i));
+  if(available.length === 0){
+    used = [];
+    available = pool.map((_,i)=>i);
+  }
+  const pick = available[Math.floor(Math.random()*available.length)];
+  used.push(pick);
+  usedIndexes[key] = used;
+  saveUsed();
+  document.getElementById('blessingText').value = pool[pick];
+  updatePoolInfo();
+  renderContacts();
+}
+function updatePoolInfo(){
+  const key = getPoolKeyForToday();
+  const pool = getPoolForToday();
+  const used = (usedIndexes[key]||[]).length;
+  document.getElementById('poolInfo').textContent =
+    `Bibliothèque du ${key==='friday'?'vendredi':'lundi'} : ${used}/${pool.length} déjà utilisées ce cycle (rotation sans répétition).`;
+}
+function copyBlessing(){
+  const text = applyName(document.getElementById('blessingText').value, '');
+  navigator.clipboard.writeText(text).then(()=>showToast('Texte copié ✓')).catch(()=>showToast("Impossible de copier"));
+}
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 1800);
+}
+
+/* ---------- Library management (search/edit/delete/add) ---------- */
+let libDay = 'monday';
+function switchLibDay(day){
+  libDay = day;
+  document.querySelectorAll('[data-libday]').forEach(t=>t.classList.toggle('active', t.dataset.libday===day));
+  renderLibrary();
+}
+function getLibArray(day){ return day==='friday' ? fridayBlessings : mondayBlessings; }
+function renderLibrary(){
+  const arr = getLibArray(libDay);
+  const q = (document.getElementById('libSearch').value||'').toLowerCase().trim();
+  const el = document.getElementById('libraryList');
+  const matches = arr.map((text,idx)=>({text,idx})).filter(m=> !q || m.text.toLowerCase().includes(q));
+  if(matches.length===0){ el.innerHTML = '<div class="empty">Aucun message trouvé.</div>'; return; }
+  el.innerHTML = matches.map(m=>`
+    <div class="row">
+      <div class="row-name" style="font-weight:400;font-size:12.5px;line-height:1.4;flex:1;">${escapeHtml(m.text)}</div>
+      <div class="row-actions">
+        <button class="icon-btn blue" onclick="editLibMessage(${m.idx})">✏️</button>
+        <button class="icon-btn danger" onclick="deleteLibMessage(${m.idx})">✕</button>
+      </div>
+    </div>
+  `).join('');
+}
+async function addLibMessage(){
+  const input = document.getElementById('newLibMessage');
+  const text = input.value.trim();
+  if(!text){ showToast("Écris un message d'abord"); return; }
+  getLibArray(libDay).push(text);
+  input.value = '';
+  usedIndexes[libDay] = []; // reset rotation since indexes shifted
+  await saveLibrary(libDay); await saveUsed();
+  renderLibrary(); updatePoolInfo();
+  showToast('Message ajouté ✓');
+}
+async function editLibMessage(idx){
+  const arr = getLibArray(libDay);
+  const updated = prompt('Modifier le message :', arr[idx]);
+  if(updated === null) return;
+  const trimmed = updated.trim();
+  if(!trimmed){ showToast("Le message ne peut pas être vide"); return; }
+  arr[idx] = trimmed;
+  await saveLibrary(libDay);
+  renderLibrary(); updatePoolInfo();
+  showToast('Message modifié ✓');
+}
+async function deleteLibMessage(idx){
+  const arr = getLibArray(libDay);
+  if(arr.length <= 1){ showToast("Il faut garder au moins un message"); return; }
+  arr.splice(idx,1);
+  usedIndexes[libDay] = []; // reset rotation since indexes shifted
+  await saveLibrary(libDay); await saveUsed();
+  renderLibrary(); updatePoolInfo();
+  showToast('Message supprimé ✓');
+}
+
+/* ---------- Contacts search & edit ---------- */
+let contactSearch = '';
+let contacts = [];
+let groups = [];
+
+async function loadAll(){
+  try{
+    const rc = await window.storage.get('contacts', false);
+    contacts = rc && rc.value ? JSON.parse(rc.value) : [];
+  }catch(e){ contacts = []; }
+  try{
+    const rg = await window.storage.get('groups', false);
+    groups = rg && rg.value ? JSON.parse(rg.value) : [{id:'default', name:'Tous'}];
+  }catch(e){ groups = [{id:'default', name:'Tous'}]; }
+  renderGroups();
+  await restoreDefaultGroup();
+  renderContacts();
+}
+async function saveContacts(){
+  try{ await window.storage.set('contacts', JSON.stringify(contacts), false); }
+  catch(e){ showToast("Erreur de sauvegarde"); }
+}
+async function saveGroups(){
+  try{ await window.storage.set('groups', JSON.stringify(groups), false); }
+  catch(e){ showToast("Erreur de sauvegarde"); }
+}
+
+function onGroupFilterChange(){
+  renderContacts();
+  saveDefaultGroup();
+}
+async function saveDefaultGroup(){
+  try{ await window.storage.set('defaultGroup', document.getElementById('groupFilter').value, false); }catch(e){}
+}
+async function restoreDefaultGroup(){
+  try{
+    const res = await window.storage.get('defaultGroup', false);
+    if(res && res.value){
+      const sel = document.getElementById('groupFilter');
+      if([...sel.options].some(o=>o.value===res.value)) sel.value = res.value;
+    }
+  }catch(e){}
+}
+function smsLink(phone, text){ return `sms:${phone}?&body=${encodeURIComponent(text)}`; }
+function waLink(phone, text){ return `https://wa.me/${cleanDigits(phone)}?text=${encodeURIComponent(text)}`; }
+function channelLink(c){
+  const personalized = applyName(document.getElementById('blessingText').value, c.name);
+  return c.channel === 'wa' ? waLink(c.phone, personalized) : smsLink(c.phone, personalized);
+}
+
+function renderGroups(){
+  const list = document.getElementById('groupList');
+  list.innerHTML = groups.map((g,i)=>`
+    <div class="row">
+      <div class="row-name">${escapeHtml(g.name)}</div>
+      ${g.id!=='default' ? `<button class="icon-btn danger" onclick="removeGroup(${i})">✕</button>` : ''}
+    </div>
+  `).join('');
+  const sel = document.getElementById('groupFilter');
+  sel.innerHTML = '<option value="all">Tous les proches</option>' +
+    groups.map(g=>`<option value="${g.id}">${escapeHtml(g.name)}</option>`).join('');
+}
+async function addGroup(){
+  const name = document.getElementById('newGroupName').value.trim();
+  if(!name){ showToast("Donne un nom au groupe"); return; }
+  groups.push({id:'g'+Date.now(), name});
+  document.getElementById('newGroupName').value = '';
+  await saveGroups();
+  renderGroups();
+}
+async function removeGroup(i){
+  const gid = groups[i].id;
+  groups.splice(i,1);
+  contacts.forEach(c=>{ if(c.groupId===gid) c.groupId='default'; });
+  await saveGroups(); await saveContacts();
+  renderGroups(); renderContacts();
+}
+
+function onContactSearch(v){ contactSearch = v.toLowerCase().trim(); renderContacts(); }
+
+function renderContacts(){
+  const list = document.getElementById('contactList');
+  const filtered = contacts
+    .map((c,i)=>({c,i}))
+    .filter(({c}) => !contactSearch || c.name.toLowerCase().includes(contactSearch) || c.phone.toLowerCase().includes(contactSearch));
+  if(contacts.length === 0){
+    list.innerHTML = '<div class="empty">Aucun proche ajouté pour l\'instant.</div>';
+    return;
+  }
+  if(filtered.length === 0){
+    list.innerHTML = '<div class="empty">Aucun résultat pour cette recherche.</div>';
+    return;
+  }
+  list.innerHTML = filtered.map(({c,i})=>`
+    <div class="row">
+      <div>
+        <div class="row-name">${escapeHtml(c.name)}</div>
+        <div class="row-sub">${escapeHtml(c.phone)} · ${escapeHtml(groupName(c.groupId))}</div>
+      </div>
+      <div class="row-actions">
+        <select onchange="setGroup(${i}, this.value)">
+          ${groups.map(g=>`<option value="${g.id}" ${c.groupId===g.id?'selected':''}>${escapeHtml(g.name)}</option>`).join('')}
+        </select>
+        <div class="channel-toggle">
+          <button class="${c.channel!=='wa'?'on':''}" onclick="setChannel(${i},'sms')">SMS</button>
+          <button class="${c.channel==='wa'?'on wa-on':''}" onclick="setChannel(${i},'wa')">WA</button>
+        </div>
+        <a class="icon-btn ${c.channel==='wa'?'wa':''}" href="${channelLink(c)}" target="_blank" onclick="logSendByIndex(${i})">Envoyer</a>
+        <button class="icon-btn blue" onclick="editContact(${i})">✏️</button>
+        <button class="icon-btn danger" onclick="removeContact(${i})">✕</button>
+      </div>
+    </div>
+  `).join('');
+}
+async function editContact(i){
+  const c = contacts[i];
+  const newName = prompt('Nom :', c.name);
+  if(newName === null) return;
+  const newPhone = prompt('Téléphone :', c.phone);
+  if(newPhone === null) return;
+  if(!newName.trim() || !newPhone.trim()){ showToast("Nom et numéro requis"); return; }
+  c.name = newName.trim();
+  c.phone = newPhone.trim();
+  await saveContacts();
+  renderContacts();
+  showToast('Contact modifié ✓');
+}
+function groupName(gid){
+  const g = groups.find(g=>g.id===gid);
+  return g ? g.name : 'Tous';
+}
+function escapeHtml(str){
+  const div = document.createElement('div');
+  div.textContent = str==null?'':str;
+  return div.innerHTML;
+}
+async function setChannel(i, ch){ contacts[i].channel = ch; await saveContacts(); renderContacts(); }
+function logSendByIndex(i){
+  const c = contacts[i];
+  if(c) logSend(c.name, c.channel || 'sms', 'ouvert');
+}
+async function setGroup(i, gid){ contacts[i].groupId = gid; await saveContacts(); renderContacts(); }
+async function addContact(){
+  const name = document.getElementById('newName').value.trim();
+  const phone = document.getElementById('newPhone').value.trim();
+  if(!name || !phone){ showToast("Ajoute un nom et un numéro"); return; }
+  contacts.push({name, phone, channel:'sms', groupId:'default'});
+  document.getElementById('newName').value = '';
+  document.getElementById('newPhone').value = '';
+  await saveContacts();
+  renderContacts();
+  showToast('Proche ajouté ✓');
+}
+async function removeContact(i){
+  const c = contacts[i];
+  if(c) await trashItem('contact', c);
+  contacts.splice(i,1);
+  await saveContacts();
+  renderContacts();
+  showToast('Contact envoyé à la corbeille');
+}
+
+async function importRows(rows){
+  let added = 0, skipped = 0;
+  for(const row of rows){
+    const name = (row[0]||'').toString().trim();
+    const phone = (row[1]||'').toString().trim();
+    const groupNameRaw = (row[2]||'').toString().trim();
+    if(!name || !phone || name.toLowerCase()==='nom'){ if(name || phone) skipped++; continue; }
+    let groupId = 'default';
+    if(groupNameRaw){
+      let g = groups.find(g=>g.name.toLowerCase()===groupNameRaw.toLowerCase());
+      if(!g){ g = {id:'g'+Date.now()+added, name:groupNameRaw}; groups.push(g); }
+      groupId = g.id;
+    }
+    contacts.push({name, phone, channel:'sms', groupId});
+    added++;
+  }
+  await saveGroups(); await saveContacts();
+  renderGroups(); renderContacts();
+  if(added === 0){
+    showToast(`Aucun contact valide trouvé (${skipped} ligne(s) ignorée(s)). Vérifie les colonnes Nom,Téléphone,Groupe.`);
+  }else{
+    showToast(`${added} contact(s) importé(s) ✓${skipped ? ' · '+skipped+' ligne(s) ignorée(s)' : ''}`);
+  }
+}
+function detectDelimiter(text){
+  const firstLine = text.split(/\r?\n/)[0] || '';
+  const counts = { ',': (firstLine.match(/,/g)||[]).length, ';': (firstLine.match(/;/g)||[]).length, '\t': (firstLine.match(/\t/g)||[]).length };
+  return Object.keys(counts).reduce((a,b)=> counts[b]>counts[a] ? b : a, ',');
+}
+function importCSV(evt){
+  const file = evt.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    try{
+      let text = reader.result.replace(/^\uFEFF/, ''); // strip BOM from Excel exports
+      const delim = detectDelimiter(text);
+      const lines = text.split(/\r?\n/).filter(l=>l.trim());
+      if(lines.length === 0){ showToast("Fichier vide"); return; }
+      const rows = lines.map(l=>l.split(delim).map(c=>c.trim().replace(/^"|"$/g,'')));
+      importRows(rows);
+    }catch(err){
+      showToast("Impossible de lire ce fichier CSV");
+    }
+  };
+  reader.onerror = ()=> showToast("Erreur de lecture du fichier");
+  reader.readAsText(file);
+}
+function importXLSX(evt){
+  const file = evt.target.files[0];
+  if(!file) return;
+  if(typeof XLSX === 'undefined'){
+    showToast("La bibliothèque Excel n'a pas pu se charger (connexion internet requise). Essaie le CSV à la place.");
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = (e)=>{
+    try{
+      const data = new Uint8Array(e.target.result);
+      const wb = XLSX.read(data, {type:'array'});
+      const sheet = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(sheet, {header:1});
+      importRows(rows);
+    }catch(err){
+      showToast("Impossible de lire ce fichier Excel — essaie de l'enregistrer en CSV.");
+    }
+  };
+  reader.onerror = ()=> showToast("Erreur de lecture du fichier");
+  reader.readAsArrayBuffer(file);
+}
+
+/* ---------- Guided send with real confirmation ---------- */
+let guidedIndex = 0, overlayOpen = false, guidedList = [];
+
+function startGuidedSend(){
+  const gid = document.getElementById('groupFilter').value;
+  guidedList = gid === 'all' ? contacts : contacts.filter(c=>c.groupId===gid);
+  if(guidedList.length === 0){ showToast("Aucun proche dans ce groupe"); return; }
+  guidedIndex = 0;
+  overlayOpen = true;
+  showGuidedStep();
+  document.getElementById('overlay').classList.add('show');
+}
+function showGuidedStep(){
+  const c = guidedList[guidedIndex];
+  document.getElementById('modalProgress').textContent = `${guidedIndex+1} / ${guidedList.length}`;
+  document.getElementById('modalWho').textContent = c.name;
+  document.getElementById('modalVia').textContent = c.channel === 'wa' ? 'via WhatsApp' : 'via SMS';
+  const link = document.getElementById('modalOpenLink');
+  link.href = channelLink(c);
+  link.className = 'open-link' + (c.channel === 'wa' ? ' wa' : '');
+  link.textContent = "Ouvrir & préparer l'envoi";
+  link.style.display = 'block';
+  document.getElementById('confirmBlock').style.display = 'none';
+}
+function handleOpenClick(){
+  document.getElementById('modalOpenLink').style.display = 'none';
+  document.getElementById('confirmBlock').style.display = 'block';
+}
+async function confirmSend(success){
+  const c = guidedList[guidedIndex];
+  await logSend(c.name, c.channel || 'sms', success ? 'envoyé' : 'échec');
+  guidedIndex++;
+  if(guidedIndex >= guidedList.length){
+    overlayOpen = false;
+    closeOverlay();
+    showToast('Tous les proches du groupe ont été contactés ✓');
+    return;
+  }
+  showGuidedStep();
+}
+function closeOverlay(){ overlayOpen = false; document.getElementById('overlay').classList.remove('show'); }
+
+/* ---------- Water tracking ---------- */
+async function logWater(status){
+  let log = [];
+  try{
+    const res = await window.storage.get('waterLog', false);
+    log = res && res.value ? JSON.parse(res.value) : [];
+  }catch(e){ log = []; }
+  log.unshift({ ts: new Date().toISOString(), status });
+  try{ await window.storage.set('waterLog', JSON.stringify(log), false); }catch(e){}
+  const labels = {bu:"Bien joué, c'est noté ✓", reporte:"Reporté de 10 minutes ⏰", ignore:"Rappel ignoré, pas de souci"};
+  showToast(labels[status]);
+  updateWaterCount(log);
+}
+async function updateWaterCount(logParam){
+  let log = logParam;
+  if(!log){
+    try{
+      const res = await window.storage.get('waterLog', false);
+      log = res && res.value ? JSON.parse(res.value) : [];
+    }catch(e){ log = []; }
+  }
+  const today = new Date().toDateString();
+  const todayCount = log.filter(l=>new Date(l.ts).toDateString()===today && l.status==='bu').length;
+  document.getElementById('waterCount').textContent = `Aujourd'hui : ${todayCount} confirmation(s) "J'ai bu".`;
+}
+
+/* ---------- Water reminder preferences (local reference only) ---------- */
+const dayDefs = [{k:'MO',l:'Lun'},{k:'TU',l:'Mar'},{k:'WE',l:'Mer'},{k:'TH',l:'Jeu'},{k:'FR',l:'Ven'},{k:'SA',l:'Sam'},{k:'SU',l:'Dim'}];
+let prefDays = ['MO','TU','WE','TH','FR','SA','SU'];
+function renderDayChips(){
+  document.getElementById('dayChips').innerHTML = dayDefs.map(d=>`
+    <div class="day-chip ${prefDays.includes(d.k)?'on':''}" onclick="toggleDay('${d.k}')">${d.l}</div>
+  `).join('');
+}
+function toggleDay(k){
+  if(prefDays.includes(k)) prefDays = prefDays.filter(x=>x!==k);
+  else prefDays.push(k);
+  renderDayChips();
+}
+async function loadPrefs(){
+  try{
+    const res = await window.storage.get('waterPrefs', false);
+    if(res && res.value){
+      const p = JSON.parse(res.value);
+      prefDays = p.days || prefDays;
+      document.getElementById('timeMatin').value = p.matin || '08:00';
+      document.getElementById('timeMidi').value = p.midi || '12:30';
+      document.getElementById('timeSoir').value = p.soir || '18:00';
+    }
+  }catch(e){}
+  renderDayChips();
+}
+async function savePrefs(){
+  const prefs = {
+    days: prefDays,
+    matin: document.getElementById('timeMatin').value,
+    midi: document.getElementById('timeMidi').value,
+    soir: document.getElementById('timeSoir').value,
+  };
+  try{ await window.storage.set('waterPrefs', JSON.stringify(prefs), false); }catch(e){}
+  showToast('Préférences enregistrées — dis-le-moi dans le chat pour sync avec tes rappels iPhone');
+}
+
+/* ---------- Send log ---------- */
+async function logSend(name, channel, status){
+  let log = [];
+  try{
+    const res = await window.storage.get('sendLog', false);
+    log = res && res.value ? JSON.parse(res.value) : [];
+  }catch(e){ log = []; }
+  log.unshift({ ts: new Date().toISOString(), name, channel, status: status || 'ouvert' });
+  try{ await window.storage.set('sendLog', JSON.stringify(log), false); }catch(e){}
+}
+
+/* ---------- History ---------- */
+async function renderHistory(){
+  let waterLog = [], sendLog = [];
+  try{ const r = await window.storage.get('waterLog', false); waterLog = r&&r.value?JSON.parse(r.value):[]; }catch(e){}
+  try{ const r = await window.storage.get('sendLog', false); sendLog = r&&r.value?JSON.parse(r.value):[]; }catch(e){}
+
+  const wList = document.getElementById('waterHistList');
+  wList.innerHTML = waterLog.length===0 ? '<div class="empty">Aucun historique pour l\'instant.</div>' :
+    waterLog.slice(0,30).map(l=>{
+      const tag = l.status==='bu' ? '<span class="hist-tag ok">J\'ai bu</span>' :
+        l.status==='reporte' ? '<span class="hist-tag warn">Reporté</span>' : '<span class="hist-tag bad">Ignoré</span>';
+      return `<div class="hist-item"><div class="hd"><span>${new Date(l.ts).toLocaleString('fr-FR')}</span>${tag}</div></div>`;
+    }).join('');
+
+  const sList = document.getElementById('sendHistList');
+  sList.innerHTML = sendLog.length===0 ? '<div class="empty">Aucun envoi pour l\'instant.</div>' :
+    sendLog.slice(0,30).map(l=>{
+      const tag = l.status==='envoyé' ? '<span class="hist-tag ok">Envoyé</span>' :
+        l.status==='échec' ? '<span class="hist-tag bad">Échec</span>' : '<span class="hist-tag warn">Ouvert</span>';
+      return `<div class="hist-item"><div class="hd"><span>${new Date(l.ts).toLocaleString('fr-FR')} · ${l.channel==='wa'?'WhatsApp':'SMS'}</span>${tag}</div>${escapeHtml(l.name)}</div>`;
+    }).join('');
+}
+
+/* ---------- Shopping list & tasks ---------- */
+let shoppingItems = [];
+let tasks = [];
+
+async function loadChecklists(){
+  try{ const r = await window.storage.get('shoppingList', false); shoppingItems = r&&r.value?JSON.parse(r.value):[]; }catch(e){ shoppingItems = []; }
+  try{ const r = await window.storage.get('taskList', false); tasks = r&&r.value?JSON.parse(r.value):[]; }catch(e){ tasks = []; }
+  renderShoppingList();
+  renderTaskList();
+}
+async function saveShoppingList(){ try{ await window.storage.set('shoppingList', JSON.stringify(shoppingItems), false); }catch(e){} }
+async function saveTaskList(){ try{ await window.storage.set('taskList', JSON.stringify(tasks), false); }catch(e){} }
+
+function renderChecklist(items, containerId, toggleFn, removeFn, calFn){
+  const el = document.getElementById(containerId);
+  if(items.length === 0){ el.innerHTML = '<div class="empty">Rien pour l\'instant.</div>'; return; }
+  el.innerHTML = items.map((it,i)=>`
+    <div class="row">
+      <div class="row-name" style="${it.done?'text-decoration:line-through;opacity:0.5;':''}" onclick="${toggleFn}(${i})">
+        ${it.done?'✅':'⬜'} ${escapeHtml(it.text)}
+      </div>
+      <div class="row-actions">
+        <button class="icon-btn blue" title="Créer un vrai rappel calendrier" onclick="${calFn}(${i})">🔔 Rappel</button>
+        <button class="icon-btn danger" onclick="${removeFn}(${i})">✕</button>
+      </div>
+    </div>
+  `).join('');
+}
+function renderShoppingList(){ renderChecklist(shoppingItems, 'shoppingList', 'toggleShoppingItem', 'removeShoppingItem', 'createShoppingReminder'); }
+function renderTaskList(){ renderChecklist(tasks, 'taskList', 'toggleTask', 'removeTask', 'createTaskReminder'); }
+
+function pad2(n){ return n.toString().padStart(2,'0'); }
+function downloadICS(title, dateObj){
+  const dt = `${dateObj.getFullYear()}${pad2(dateObj.getMonth()+1)}${pad2(dateObj.getDate())}T${pad2(dateObj.getHours())}${pad2(dateObj.getMinutes())}00`;
+  const uid = 'sante-' + Date.now() + '@app';
+  const ics = [
+    'BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Sante//FR','CALSCALE:GREGORIAN',
+    'BEGIN:VEVENT',
+    `UID:${uid}`,
+    `DTSTAMP:${dt}`,
+    `DTSTART:${dt}`,
+    'DURATION:PT15M',
+    `SUMMARY:${title.replace(/[\r\n]/g,' ')}`,
+    'BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:Rappel','TRIGGER:PT0S','END:VALARM',
+    'END:VEVENT','END:VCALENDAR'
+  ].join('\r\n');
+  const blob = new Blob([ics], {type:'text/calendar'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'rappel.ics';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url), 5000);
+}
+function promptDateTime(defaultLabel){
+  const dateStr = prompt(`Date du rappel pour "${defaultLabel}" (JJ/MM/AAAA) :`, new Date().toLocaleDateString('fr-FR'));
+  if(!dateStr) return null;
+  const timeStr = prompt(`Heure (HH:MM) :`, '18:00');
+  if(!timeStr) return null;
+  const [d,m,y] = dateStr.split('/').map(s=>parseInt(s,10));
+  const [hh,mm] = timeStr.split(':').map(s=>parseInt(s,10));
+  if(!d||!m||!y||isNaN(hh)||isNaN(mm)){ showToast("Format non reconnu"); return null; }
+  return new Date(y, m-1, d, hh, mm, 0);
+}
+function createShoppingReminder(i){
+  const item = shoppingItems[i];
+  const dt = promptDateTime(item.text);
+  if(!dt) return;
+  downloadICS('🛒 ' + item.text, dt);
+  showToast('Fichier rappel téléchargé — ouvre-le pour l\'ajouter au Calendrier');
+}
+function createTaskReminder(i){
+  const item = tasks[i];
+  const dt = promptDateTime(item.text);
+  if(!dt) return;
+  downloadICS('✅ ' + item.text, dt);
+  showToast('Fichier rappel téléchargé — ouvre-le pour l\'ajouter au Calendrier');
+}
+
+async function addShoppingItem(){
+  const input = document.getElementById('newShoppingItem');
+  const text = input.value.trim();
+  if(!text) return;
+  shoppingItems.push({text, done:false});
+  input.value = '';
+  await saveShoppingList();
+  renderShoppingList();
+}
+async function toggleShoppingItem(i){ shoppingItems[i].done = !shoppingItems[i].done; await saveShoppingList(); renderShoppingList(); }
+async function removeShoppingItem(i){ shoppingItems.splice(i,1); await saveShoppingList(); renderShoppingList(); }
+
+async function addTask(){
+  const input = document.getElementById('newTask');
+  const text = input.value.trim();
+  if(!text) return;
+  tasks.push({text, done:false});
+  input.value = '';
+  await saveTaskList();
+  renderTaskList();
+}
+async function toggleTask(i){ tasks[i].done = !tasks[i].done; await saveTaskList(); renderTaskList(); }
+async function removeTask(i){ tasks.splice(i,1); await saveTaskList(); renderTaskList(); }
+
+/* ---------- Solaire: comptes clients ---------- */
+let solarClients = [];   // {id, name}
+let solarLines = [];     // {id, clientId, produit, quantite, puAchat, puVente, fournisseurStatut, montantPayeFournisseur, date}
+let solarPayments = [];  // {id, clientId, montant, date}
+let selectedClientId = null;
+let clientSearch = '';
+let articleSearch = '';
+
+async function loadSolarData(){
+  try{ const r = await window.storage.get('solarClients', false); solarClients = r&&r.value?JSON.parse(r.value):[]; }catch(e){ solarClients = []; }
+  try{ const r = await window.storage.get('solarLines', false); solarLines = r&&r.value?JSON.parse(r.value):[]; }catch(e){ solarLines = []; }
+  try{ const r = await window.storage.get('solarPayments', false); solarPayments = r&&r.value?JSON.parse(r.value):[]; }catch(e){ solarPayments = []; }
+  renderClientPicker();
+  renderClientAccount();
+  updateSolarSummary();
+}
+async function saveSolarClients(){ try{ await window.storage.set('solarClients', JSON.stringify(solarClients), false); }catch(e){ showToast('Erreur de sauvegarde'); } }
+async function saveSolarLines(){ try{ await window.storage.set('solarLines', JSON.stringify(solarLines), false); }catch(e){ showToast('Erreur de sauvegarde'); } }
+async function saveSolarPayments(){ try{ await window.storage.set('solarPayments', JSON.stringify(solarPayments), false); }catch(e){ showToast('Erreur de sauvegarde'); } }
+
+function fmtFCFA(n){ return (Math.round(n)||0).toLocaleString('fr-FR') + ' FCFA'; }
+
+function clientTotals(clientId){
+  const lines = solarLines.filter(l=>l.clientId===clientId);
+  const totalVente = lines.reduce((s,l)=> s + l.quantite*l.puVente, 0);
+  const totalAchat = lines.reduce((s,l)=> s + l.quantite*l.puAchat, 0);
+  const totalBenefice = totalVente - totalAchat;
+  const totalPaye = solarPayments.filter(p=>p.clientId===clientId).reduce((s,p)=>s+p.montant,0);
+  const reliquat = totalVente - totalPaye;
+  const duFournisseur = lines.filter(l=>l.fournisseurStatut==='credit')
+    .reduce((s,l)=> s + Math.max(0, l.quantite*l.puAchat - l.montantPayeFournisseur), 0);
+  return {totalVente, totalAchat, totalBenefice, totalPaye, reliquat, duFournisseur};
+}
+
+async function addSolarClient(){
+  const input = document.getElementById('newClientName');
+  const name = input.value.trim();
+  if(!name){ showToast("Donne un nom de client"); return; }
+  const c = {id:'cl'+Date.now(), name};
+  solarClients.push(c);
+  input.value = '';
+  await saveSolarClients();
+  renderClientPicker();
+  selectClient(c.id);
+  showToast('Client ajouté ✓');
+}
+async function removeSolarClient(id){
+  const client = solarClients.find(c=>c.id===id);
+  const lines = solarLines.filter(l=>l.clientId===id);
+  const payments = solarPayments.filter(p=>p.clientId===id);
+  if(client) await trashItem('client', {client, lines, payments});
+  solarClients = solarClients.filter(c=>c.id!==id);
+  solarLines = solarLines.filter(l=>l.clientId!==id);
+  solarPayments = solarPayments.filter(p=>p.clientId!==id);
+  if(selectedClientId===id) selectedClientId = null;
+  await saveSolarClients(); await saveSolarLines(); await saveSolarPayments();
+  renderClientPicker(); renderClientAccount(); updateSolarSummary();
+  showToast('Client envoyé à la corbeille');
+}
+function selectClient(id){
+  selectedClientId = id;
+  renderClientPicker();
+  renderClientAccount();
+}
+
+function renderClientPicker(){
+  clientSearch = (document.getElementById('clientSearchInput').value||'').toLowerCase().trim();
+  const el = document.getElementById('clientPicker');
+  const filtered = solarClients.filter(c=> !clientSearch || c.name.toLowerCase().includes(clientSearch));
+  if(filtered.length===0){ el.innerHTML = '<div class="empty">Aucun client.</div>'; return; }
+  el.innerHTML = filtered.map(c=>{
+    const t = clientTotals(c.id);
+    const active = c.id===selectedClientId;
+    return `
+      <div class="row" style="${active?'border-color:var(--gold);':''}cursor:pointer;" onclick="selectClient('${c.id}')">
+        <div>
+          <div class="row-name">${escapeHtml(c.name)}</div>
+          <div class="row-sub">Doit : ${fmtFCFA(Math.max(0,t.reliquat))}</div>
+        </div>
+        <button class="icon-btn danger" onclick="event.stopPropagation();removeSolarClient('${c.id}')">✕</button>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderClientAccount(){
+  const el = document.getElementById('clientAccount');
+  if(!selectedClientId){ el.innerHTML = ''; return; }
+  const client = solarClients.find(c=>c.id===selectedClientId);
+  if(!client){ el.innerHTML = ''; return; }
+  const lines = solarLines.filter(l=>l.clientId===selectedClientId);
+  const payments = solarPayments.filter(p=>p.clientId===selectedClientId);
+  const t = clientTotals(selectedClientId);
+
+  el.innerHTML = `
+    <h2>📒 Compte de ${escapeHtml(client.name)}</h2>
+    <div class="card-actions" style="margin-bottom:12px;">
+      <button class="btn-gold" onclick="generateClientInvoice('${client.id}')">🧾 Facture client</button>
+      <button class="btn-ghost" onclick="generateSupplierStatement('${client.id}')">🧾 Relevé fournisseur</button>
+    </div>
+    <div class="row"><div class="row-name">Total vente</div><div class="row-name">${fmtFCFA(t.totalVente)}</div></div>
+    <div class="row"><div class="row-name">Total achat</div><div class="row-name">${fmtFCFA(t.totalAchat)}</div></div>
+    <div class="row" style="background:rgba(217,164,65,0.1);"><div class="row-name">Bénéfice</div><div class="row-name" style="color:var(--gold-soft);">${fmtFCFA(t.totalBenefice)}</div></div>
+    <div class="row" style="background:rgba(63,167,114,0.1);"><div class="row-name">Déjà payé par le client</div><div class="row-name" style="color:#8FD9AE;">${fmtFCFA(t.totalPaye)}</div></div>
+    <div class="row" style="background:rgba(181,101,79,0.1);"><div class="row-name">Solde dû par le client</div><div class="row-name" style="color:#E3A392;">${fmtFCFA(Math.max(0,t.reliquat))}</div></div>
+
+    <h2 style="margin-top:16px;">Produits</h2>
+    <div id="lineList"></div>
+    <div class="add-form" style="flex-direction:column;">
+      <select id="lCategorie" style="width:100%;padding:10px;">
+        <option value="produit">📦 Produit</option>
+        <option value="soudure">🔧 Main d'œuvre — Soudure</option>
+        <option value="electricite">⚡ Main d'œuvre — Électricité</option>
+        <option value="autre">🛠 Main d'œuvre — Autre</option>
+      </select>
+      <input type="text" id="lProduit" placeholder="Description (ex: Fil 2.5mm, Soudure portail...)">
+      <input type="number" id="lQuantite" placeholder="Quantité (ou heures / forfait = 1)">
+      <input type="number" id="lPuAchat" placeholder="Coût unitaire (fournisseur ou ouvrier payé)">
+      <input type="number" id="lPuVente" placeholder="Prix unitaire facturé au client">
+      <div class="channel-toggle" id="fournisseurToggle" style="align-self:flex-start;">
+        <button class="on" data-val="paye" onclick="setFournisseurStatut('paye')">Coût payé</button>
+        <button data-val="credit" onclick="setFournisseurStatut('credit')">Coût à crédit</button>
+      </div>
+      <input type="number" id="lMontantPayeFournisseur" placeholder="Montant déjà versé (si à crédit)" style="display:none;">
+      <button class="btn-gold" onclick="addSolarLine()">Ajouter</button>
+    </div>
+
+    <h2 style="margin-top:16px;">Paiements reçus</h2>
+    <div id="paymentList"></div>
+    <div class="add-form">
+      <input type="number" id="pMontant" placeholder="Montant reçu (FCFA)">
+      <button class="btn-gold" onclick="addSolarPayment()">Enregistrer le paiement</button>
+    </div>
+  `;
+  newLineFournisseurStatut = 'paye';
+
+  document.getElementById('lineList').innerHTML = lines.length===0 ? '<div class="empty">Rien encore.</div>' :
+    lines.map(l=>{
+      const totalAchat = l.quantite*l.puAchat, totalVente = l.quantite*l.puVente, benef = totalVente-totalAchat;
+      const fournStatut = l.fournisseurStatut==='paye' ? '<span class="hist-tag ok">Coût payé</span>' : '<span class="hist-tag bad">Coût à crédit</span>';
+      const catLabels = {produit:'📦 Produit', soudure:'🔧 Soudure', electricite:'⚡ Électricité', autre:'🛠 Autre'};
+      const catTag = `<span class="hist-tag warn">${catLabels[l.categorie]||'📦 Produit'}</span>`;
+      return `<div class="hist-item">
+        <div class="hd"><span>${escapeHtml(l.produit)} · Qté ${l.quantite}</span>${catTag}</div>
+        Coût unit. ${fmtFCFA(l.puAchat)} · Prix unit. ${fmtFCFA(l.puVente)} · <b style="color:#E8C170;">Bénéfice ${fmtFCFA(benef)}</b> ${fournStatut}
+        <div class="row-actions" style="margin-top:6px;">
+          <button class="icon-btn blue" onclick="editSolarLine('${l.id}')">✏️</button>
+          <button class="icon-btn danger" onclick="deleteSolarLine('${l.id}')">✕</button>
+        </div>
+      </div>`;
+    }).join('');
+
+  document.getElementById('paymentList').innerHTML = payments.length===0 ? '<div class="empty">Aucun paiement encore.</div>' :
+    payments.map(p=>`<div class="hist-item"><div class="hd"><span>${new Date(p.date).toLocaleDateString('fr-FR')}</span>
+      <span class="hist-tag ok">${fmtFCFA(p.montant)}</span></div>
+      <button class="icon-btn danger" style="margin-top:6px;" onclick="deleteSolarPayment('${p.id}')">✕ Supprimer</button></div>`).join('');
+}
+
+let newLineFournisseurStatut = 'paye';
+function setFournisseurStatut(val){
+  newLineFournisseurStatut = val;
+  document.querySelectorAll('#fournisseurToggle button').forEach(b=>b.classList.toggle('on', b.dataset.val===val));
+  const mf = document.getElementById('lMontantPayeFournisseur');
+  if(mf) mf.style.display = val==='credit' ? 'block' : 'none';
+}
+
+async function addSolarLine(){
+  const categorie = document.getElementById('lCategorie').value;
+  const produit = document.getElementById('lProduit').value.trim();
+  const quantite = parseFloat(document.getElementById('lQuantite').value) || 0;
+  const puAchat = parseFloat(document.getElementById('lPuAchat').value) || 0;
+  const puVente = parseFloat(document.getElementById('lPuVente').value) || 0;
+  const montantPayeFournisseur = parseFloat(document.getElementById('lMontantPayeFournisseur').value) || 0;
+  if(!produit || !quantite || !puVente){ showToast("Remplis au moins la description, la quantité et le prix facturé"); return; }
+  solarLines.push({
+    id:'l'+Date.now(), clientId:selectedClientId, categorie, produit, quantite, puAchat, puVente,
+    fournisseurStatut:newLineFournisseurStatut,
+    montantPayeFournisseur: newLineFournisseurStatut==='credit' ? montantPayeFournisseur : quantite*puAchat,
+    date:new Date().toISOString()
+  });
+  await saveSolarLines();
+  renderClientAccount(); renderClientPicker(); updateSolarSummary();
+  showToast('Ajouté ✓');
+}
+async function deleteSolarLine(id){
+  solarLines = solarLines.filter(l=>l.id!==id);
+  await saveSolarLines();
+  renderClientAccount(); renderClientPicker(); updateSolarSummary();
+}
+async function editSolarLine(id){
+  const l = solarLines.find(l=>l.id===id);
+  if(!l) return;
+  const produit = prompt('Produit :', l.produit); if(produit===null) return;
+  const quantite = prompt('Quantité :', l.quantite); if(quantite===null) return;
+  const puAchat = prompt("Prix unitaire d'achat :", l.puAchat); if(puAchat===null) return;
+  const puVente = prompt('Prix unitaire de vente :', l.puVente); if(puVente===null) return;
+  const montantPayeFournisseur = prompt('Montant versé au fournisseur :', l.montantPayeFournisseur); if(montantPayeFournisseur===null) return;
+  l.produit = produit.trim();
+  l.quantite = parseFloat(quantite)||0;
+  l.puAchat = parseFloat(puAchat)||0;
+  l.puVente = parseFloat(puVente)||0;
+  l.montantPayeFournisseur = parseFloat(montantPayeFournisseur)||0;
+  l.fournisseurStatut = l.montantPayeFournisseur >= l.quantite*l.puAchat ? 'paye' : 'credit';
+  await saveSolarLines();
+  renderClientAccount(); renderClientPicker(); updateSolarSummary();
+  showToast('Produit modifié ✓');
+}
+
+async function addSolarPayment(){
+  const montant = parseFloat(document.getElementById('pMontant').value) || 0;
+  if(!montant){ showToast("Indique un montant"); return; }
+  solarPayments.push({id:'p'+Date.now(), clientId:selectedClientId, montant, date:new Date().toISOString()});
+  await saveSolarPayments();
+  renderClientAccount(); renderClientPicker(); updateSolarSummary();
+  showToast('Paiement enregistré ✓');
+}
+async function deleteSolarPayment(id){
+  solarPayments = solarPayments.filter(p=>p.id!==id);
+  await saveSolarPayments();
+  renderClientAccount(); renderClientPicker(); updateSolarSummary();
+}
+
+function updateSolarSummary(){
+  let totalProfit=0, totalClientDue=0, totalSupplierDue=0;
+  solarClients.forEach(c=>{
+    const t = clientTotals(c.id);
+    totalProfit += t.totalBenefice;
+    totalClientDue += Math.max(0,t.reliquat);
+    totalSupplierDue += t.duFournisseur;
+  });
+  document.getElementById('sumProfit').textContent = fmtFCFA(totalProfit);
+  document.getElementById('sumClientDue').textContent = fmtFCFA(totalClientDue);
+  document.getElementById('sumSupplierDue').textContent = fmtFCFA(totalSupplierDue);
+}
+
+function renderArticleSearch(){
+  articleSearch = (document.getElementById('articleSearchInput').value||'').toLowerCase().trim();
+  const el = document.getElementById('articleSearchResults');
+  if(!articleSearch){ el.innerHTML = ''; return; }
+  const matches = solarLines.filter(l=>l.produit.toLowerCase().includes(articleSearch));
+  if(matches.length===0){ el.innerHTML = '<div class="empty">Aucun article trouvé.</div>'; return; }
+  const grouped = {};
+  matches.forEach(l=>{
+    const key = l.produit.toLowerCase();
+    if(!grouped[key]) grouped[key] = {produit:l.produit, quantite:0, totalVente:0, totalAchat:0};
+    grouped[key].quantite += l.quantite;
+    grouped[key].totalVente += l.quantite*l.puVente;
+    grouped[key].totalAchat += l.quantite*l.puAchat;
+  });
+  el.innerHTML = Object.values(grouped).map(g=>{
+    const client = matches.find(l=>l.produit.toLowerCase()===g.produit.toLowerCase());
+    return `<div class="hist-item">
+      <div class="hd"><span>${escapeHtml(g.produit)}</span><span>Qté totale : ${g.quantite}</span></div>
+      Vente totale ${fmtFCFA(g.totalVente)} · Achat total ${fmtFCFA(g.totalAchat)} · <b style="color:#E8C170;">Bénéfice ${fmtFCFA(g.totalVente-g.totalAchat)}</b>
+    </div>`;
+  }).join('');
+}
+
+/* ---------- Backup & restore ---------- */
+const ALL_STORAGE_KEYS = ['contacts','groups','solarClients','solarLines','solarPayments',
+  'shoppingList','taskList','libMonday','libFriday','waterLog','sendLog','usedIndexes',
+  'waterPrefs','defaultGroup','trash'];
+
+async function exportAllData(){
+  const data = {};
+  for(const key of ALL_STORAGE_KEYS){
+    try{
+      const r = await window.storage.get(key, false);
+      data[key] = r && r.value ? JSON.parse(r.value) : null;
+    }catch(e){ data[key] = null; }
+  }
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  const dateStr = new Date().toISOString().slice(0,10);
+  a.download = `sante_sauvegarde_${dateStr}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url), 5000);
+  showToast('Sauvegarde téléchargée ✓');
+}
+
+function importAllData(evt){
+  const file = evt.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = async ()=>{
+    try{
+      const data = JSON.parse(reader.result);
+      for(const key of ALL_STORAGE_KEYS){
+        if(data[key] !== undefined && data[key] !== null){
+          await window.storage.set(key, JSON.stringify(data[key]), false);
+        }
+      }
+      showToast('Restauration réussie — rechargement...');
+      setTimeout(()=> location.reload(), 1200);
+    }catch(err){
+      showToast("Fichier de sauvegarde invalide");
+    }
+  };
+  reader.onerror = ()=> showToast("Erreur de lecture du fichier");
+  reader.readAsText(file);
+}
+
+/* ---------- Trash (corbeille) ---------- */
+let trash = [];
+async function loadTrash(){
+  try{ const r = await window.storage.get('trash', false); trash = r&&r.value?JSON.parse(r.value):[]; }catch(e){ trash = []; }
+  renderTrash();
+}
+async function saveTrash(){ try{ await window.storage.set('trash', JSON.stringify(trash), false); }catch(e){} }
+
+async function trashItem(type, data){
+  trash.unshift({id:'t'+Date.now(), type, data, deletedAt:new Date().toISOString()});
+  await saveTrash();
+  renderTrash();
+}
+
+function renderTrash(){
+  const el = document.getElementById('trashList');
+  if(!el) return;
+  if(trash.length===0){ el.innerHTML = '<div class="empty">Corbeille vide.</div>'; return; }
+  el.innerHTML = trash.map(t=>{
+    const label = t.type==='client' ? `👤 Client : ${escapeHtml(t.data.client.name)}` : `📇 Contact : ${escapeHtml(t.data.name)}`;
+    return `<div class="hist-item">
+      <div class="hd"><span>${label}</span><span>${new Date(t.deletedAt).toLocaleDateString('fr-FR')}</span></div>
+      <div class="row-actions" style="margin-top:6px;">
+        <button class="icon-btn blue" onclick="restoreTrashItem('${t.id}')">♻️ Restaurer</button>
+        <button class="icon-btn danger" onclick="purgeTrashItem('${t.id}')">✕ Supprimer définitivement</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function restoreTrashItem(id){
+  const t = trash.find(t=>t.id===id);
+  if(!t) return;
+  if(t.type==='client'){
+    solarClients.push(t.data.client);
+    solarLines = solarLines.concat(t.data.lines||[]);
+    solarPayments = solarPayments.concat(t.data.payments||[]);
+    await saveSolarClients(); await saveSolarLines(); await saveSolarPayments();
+    renderClientPicker(); renderClientAccount(); updateSolarSummary();
+  }else if(t.type==='contact'){
+    contacts.push(t.data);
+    await saveContacts();
+    renderContacts();
+  }
+  trash = trash.filter(x=>x.id!==id);
+  await saveTrash();
+  renderTrash();
+  showToast('Restauré ✓');
+}
+async function purgeTrashItem(id){
+  trash = trash.filter(x=>x.id!==id);
+  await saveTrash();
+  renderTrash();
+  showToast('Supprimé définitivement');
+}
+
+/* ---------- Invoices ---------- */
+function downloadHTMLDoc(filename, htmlContent){
+  const blob = new Blob([htmlContent], {type:'text/html'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url), 5000);
+}
+function invoiceStyleHead(title){
+  return `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>${title}</title>
+  <style>
+    body{font-family:'Georgia',serif;color:#241F1A;background:#fff;padding:32px;max-width:700px;margin:0 auto;}
+    h1{color:#16213E;font-size:24px;margin-bottom:4px;}
+    .sub{color:#B5654F;font-size:13px;margin-bottom:24px;}
+    table{width:100%;border-collapse:collapse;margin:16px 0;}
+    th{background:#16213E;color:#F6F1E4;text-align:left;padding:8px 10px;font-size:12px;}
+    td{padding:8px 10px;border-bottom:1px solid #ddd;font-size:13px;}
+    .totals{margin-top:16px;font-size:14px;}
+    .totals div{display:flex;justify-content:space-between;padding:4px 0;}
+    .grand{font-weight:bold;font-size:16px;color:#B5654F;border-top:2px solid #16213E;padding-top:8px;margin-top:6px;}
+    .footer{margin-top:30px;font-size:11px;color:#888;}
+    @media print{ body{padding:10px;} }
+  </style></head><body>`;
+}
+function generateClientInvoice(clientId){
+  const client = solarClients.find(c=>c.id===clientId);
+  if(!client) return;
+  const lines = solarLines.filter(l=>l.clientId===clientId);
+  const t = clientTotals(clientId);
+  const catLabels = {produit:'Produit', soudure:'Main d\'œuvre — Soudure', electricite:'Main d\'œuvre — Électricité', autre:'Main d\'œuvre — Autre'};
+  const rows = lines.map(l=>`<tr>
+    <td>${escapeHtml(l.produit)}</td><td>${catLabels[l.categorie]||'Produit'}</td>
+    <td>${l.quantite}</td><td>${fmtFCFA(l.puVente)}</td><td>${fmtFCFA(l.quantite*l.puVente)}</td>
+  </tr>`).join('');
+  const html = invoiceStyleHead('Facture - '+client.name) + `
+    <h1>FACTURE</h1>
+    <div class="sub">Client : ${escapeHtml(client.name)} · Date : ${new Date().toLocaleDateString('fr-FR')}</div>
+    <table><thead><tr><th>Description</th><th>Catégorie</th><th>Qté</th><th>Prix unit.</th><th>Total</th></tr></thead>
+    <tbody>${rows}</tbody></table>
+    <div class="totals">
+      <div><span>Total facturé</span><span>${fmtFCFA(t.totalVente)}</span></div>
+      <div><span>Déjà payé</span><span>${fmtFCFA(t.totalPaye)}</span></div>
+      <div class="grand"><span>Solde dû</span><span>${fmtFCFA(Math.max(0,t.reliquat))}</span></div>
+    </div>
+    <div class="footer">Généré par Santé 🥃 · Pour obtenir un PDF : ouvre ce fichier puis Imprimer → Enregistrer en PDF.</div>
+  </body></html>`;
+  downloadHTMLDoc(`Facture_${client.name.replace(/\s+/g,'_')}.html`, html);
+  showToast('Facture téléchargée ✓');
+}
+function generateSupplierStatement(clientId){
+  const client = solarClients.find(c=>c.id===clientId);
+  if(!client) return;
+  const lines = solarLines.filter(l=>l.clientId===clientId);
+  const catLabels = {produit:'Produit', soudure:'Main d\'œuvre — Soudure', electricite:'Main d\'œuvre — Électricité', autre:'Main d\'œuvre — Autre'};
+  let totalCout=0, totalVerse=0;
+  const rows = lines.map(l=>{
+    const totalLigne = l.quantite*l.puAchat;
+    const reste = Math.max(0, totalLigne - l.montantPayeFournisseur);
+    totalCout += totalLigne; totalVerse += l.montantPayeFournisseur;
+    const statut = l.fournisseurStatut==='paye' ? 'Payé' : 'À crédit';
+    return `<tr>
+      <td>${escapeHtml(l.produit)}</td><td>${catLabels[l.categorie]||'Produit'}</td>
+      <td>${l.quantite}</td><td>${fmtFCFA(l.puAchat)}</td><td>${fmtFCFA(totalLigne)}</td>
+      <td>${statut}</td><td>${fmtFCFA(reste)}</td>
+    </tr>`;
+  }).join('');
+  const resteDu = Math.max(0, totalCout - totalVerse);
+  const html = invoiceStyleHead('Relevé fournisseur - '+client.name) + `
+    <h1>RELEVÉ FOURNISSEUR / MAIN D'ŒUVRE</h1>
+    <div class="sub">Affaire liée au client : ${escapeHtml(client.name)} · Date : ${new Date().toLocaleDateString('fr-FR')}</div>
+    <table><thead><tr><th>Description</th><th>Catégorie</th><th>Qté</th><th>Coût unit.</th><th>Total</th><th>Statut</th><th>Reste dû</th></tr></thead>
+    <tbody>${rows}</tbody></table>
+    <div class="totals">
+      <div><span>Coût total</span><span>${fmtFCFA(totalCout)}</span></div>
+      <div><span>Déjà versé</span><span>${fmtFCFA(totalVerse)}</span></div>
+      <div class="grand"><span>Reste à payer au(x) fournisseur(s)/ouvrier(s)</span><span>${fmtFCFA(resteDu)}</span></div>
+    </div>
+    <div class="footer">Généré par Santé 🥃 · Document interne, pas destiné au client. Pour obtenir un PDF : ouvre ce fichier puis Imprimer → Enregistrer en PDF.</div>
+  </body></html>`;
+  downloadHTMLDoc(`Releve_Fournisseur_${client.name.replace(/\s+/g,'_')}.html`, html);
+  showToast('Relevé fournisseur téléchargé ✓');
+}
+
+/* ---------- Init ---------- */
+async function init(){
+  document.getElementById('dayTag').textContent = dayLabel();
+  await loadLibrary();
+  await loadUsed();
+  nextFromPool();
+  libDay = getPoolKeyForToday();
+  document.querySelectorAll('[data-libday]').forEach(t=>t.classList.toggle('active', t.dataset.libday===libDay));
+  renderLibrary();
+  await loadAll();
+  await loadPrefs();
+  await loadChecklists();
+  await loadSolarData();
+  await loadTrash();
+  updateWaterCount();
+  document.getElementById('blessingText').addEventListener('input', renderContacts);
+}
+init();
+</script>
+</body>
+</html>
