@@ -131,6 +131,9 @@
   .file-btn{display:inline-block;background:rgba(78,134,198,0.16);color:#9FC0E8;border-radius:9px;padding:9px 12px;
     font-size:12px;font-weight:600;cursor:pointer;margin-top:10px;margin-right:8px;}
   .file-btn input{display:none;}
+  .backup-banner{background:rgba(181,101,79,0.18);border:1px solid rgba(181,101,79,0.5);border-radius:12px;
+    padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:16px;
+    font-size:12.5px;color:#F0D9CF;flex-wrap:wrap;line-height:1.4;}
 </style>
 </head>
 <body>
@@ -139,6 +142,11 @@
   <h1>Bénédictions & Bien-être</h1>
   <div class="subtitle">Rappels d'eau, bénédictions du jour, proches et historique.</div>
   <div class="sunrise"></div>
+
+  <div id="backupBanner" class="backup-banner" style="display:none;">
+    <span id="backupBannerText"></span>
+    <button class="btn-gold" onclick="exportAllData()">💾 Sauvegarder</button>
+  </div>
 
   <div class="tabs">
     <div class="tab active" data-tab="bless" onclick="switchTab('bless')"><span class="tab-icon">🙏</span><span>Bénédictions</span></div>
@@ -284,14 +292,20 @@
     </div>
 
     <h2 style="margin-top:22px;">💾 Sauvegarde & restauration</h2>
-    <div class="section-sub">Exporte toutes tes données (contacts, comptes clients, bibliothèque...) dans un fichier, pour les restaurer plus tard ou sur un autre appareil.</div>
+    <div class="section-sub">Exporte toutes tes données dans un fichier à garder en lieu sûr (iCloud, e-mail, WhatsApp à toi-même...). Conseil : une fois par semaine.</div>
+    <div class="section-sub" id="backupInfo" style="color:var(--gold-soft);"></div>
     <div class="card-actions">
-      <button class="btn-gold" onclick="exportAllData()">⬇️ Exporter mes données</button>
+      <button class="btn-gold" onclick="exportAllData()">💾 Exporter mes données</button>
       <label class="file-btn" style="margin:0;">
         ⬆️ Restaurer depuis un fichier
-        <input type="file" accept=".json" onchange="importAllData(event)">
+        <input type="file" accept=".json,application/json" onchange="importAllData(event)">
       </label>
     </div>
+    <button class="btn-ghost" id="undoRestoreBtn" style="display:none;margin-top:10px;" onclick="undoLastRestore()">↩️ Annuler la dernière restauration</button>
+
+    <h2 style="margin-top:22px;">🕐 Copies automatiques (3 derniers jours)</h2>
+    <div class="section-sub">Chaque jour, l'app garde une copie interne de tout — utile en cas de fausse manipulation. Attention : ces copies vivent dans Safari elles aussi ; seul le fichier exporté est une vraie sauvegarde externe.</div>
+    <div id="snapshotList"></div>
 
     <h2 style="margin-top:22px;">🗑 Corbeille</h2>
     <div class="section-sub">Clients et contacts supprimés — récupérables tant qu'ils sont ici.</div>
@@ -341,6 +355,8 @@
     <h2 style="margin-top:18px;">Envois de bénédictions</h2>
     <div id="sendHistList"></div>
   </div>
+
+  <div class="footnote" style="margin-top:26px;">Santé · version 2.1 — sauvegarde renforcée</div>
 </div>
 
 <div class="overlay" id="overlay">
@@ -362,11 +378,61 @@
   </div>
 </div>
 
+<div class="overlay" id="restoreOverlay">
+  <div class="modal">
+    <div class="progress">Restauration</div>
+    <div class="who" style="font-size:19px;">Confirmer la restauration ?</div>
+    <div class="via" id="restoreSummary" style="text-align:left;white-space:pre-line;"></div>
+    <div class="step-actions">
+      <button class="confirm-ok" style="padding:13px;border-radius:10px;font-weight:700;font-size:14px;" onclick="applyPendingRestore()">✅ Restaurer maintenant</button>
+      <button class="close-btn" onclick="closeRestoreOverlay()">Annuler</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 <button id="fab" onclick="startGuidedSend()" style="position:fixed;bottom:24px;right:20px;width:58px;height:58px;border-radius:50%;
   background:var(--gold);color:var(--ink-deep);font-size:24px;box-shadow:0 8px 20px rgba(0,0,0,0.35);z-index:40;">🚀</button>
 
 <script>
+/* ---------- Stockage : compatible aperçu Claude ET hébergement web (GitHub Pages) ---------- */
+if(!window.storage){
+  const PFX = 'sante:';
+  window.storage = {
+    async get(key){ const v = localStorage.getItem(PFX+key); return v===null ? null : {key, value:v, shared:false}; },
+    async set(key, value){ localStorage.setItem(PFX+key, value); return {key, value, shared:false}; },
+    async delete(key){ localStorage.removeItem(PFX+key); return {key, deleted:true, shared:false}; },
+    async list(prefix){
+      const keys = [];
+      for(let i=0;i<localStorage.length;i++){
+        const k = localStorage.key(i);
+        if(k && k.indexOf(PFX)===0){
+          const short = k.slice(PFX.length);
+          if(!prefix || short.indexOf(prefix)===0) keys.push(short);
+        }
+      }
+      return {keys, shared:false};
+    }
+  };
+}
+
+/* ---------- Nettoyage des numéros de téléphone ---------- */
+function cleanDigits(phone){ return (phone||'').toString().replace(/\D/g,''); }
+function cleanPhoneForSms(phone){ return (phone||'').toString().replace(/[^\d+]/g,''); }
+
+/* ---------- Confirmation en deux taps (fonctionne partout, tactile) ---------- */
+let pendingConfirm = {key:null, ts:0};
+function confirmTwice(key, msg){
+  const now = Date.now();
+  if(pendingConfirm.key === key && now - pendingConfirm.ts < 4000){
+    pendingConfirm = {key:null, ts:0};
+    return true;
+  }
+  pendingConfirm = {key, ts: now};
+  showToast(msg || 'Tape encore une fois pour confirmer');
+  return false;
+}
+
 /* ---------- Tabs ---------- */
 function switchTab(name){
   document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.tab===name));
@@ -435,7 +501,6 @@ async function saveLibrary(key){
   }catch(e){ showToast('Erreur de sauvegarde'); }
 }
 
-let currentPool = [];
 function getPoolKeyForToday(){ return new Date().getDay() === 5 ? 'friday' : 'monday'; }
 function getPoolForToday(){ return getPoolKeyForToday()==='friday' ? fridayBlessings : mondayBlessings; }
 function dayLabel(){
@@ -457,6 +522,31 @@ async function saveUsed(){
   try{ await window.storage.set('usedIndexes', JSON.stringify(usedIndexes), false); }catch(e){}
 }
 
+/* La bénédiction affichée est mémorisée : ouvrir l'app plusieurs fois
+   ne consomme plus la rotation. Seul le bouton ✨ tire un nouveau message. */
+async function saveCurrentBlessing(text){
+  try{
+    await window.storage.set('currentBlessing', JSON.stringify({
+      text: text,
+      poolKey: getPoolKeyForToday(),
+      day: new Date().toDateString()
+    }), false);
+  }catch(e){}
+}
+async function loadCurrentBlessing(){
+  try{
+    const res = await window.storage.get('currentBlessing', false);
+    if(res && res.value){
+      const cb = JSON.parse(res.value);
+      if(cb.text && cb.day === new Date().toDateString() && cb.poolKey === getPoolKeyForToday()){
+        document.getElementById('blessingText').value = cb.text;
+        return true;
+      }
+    }
+  }catch(e){}
+  return false;
+}
+
 function nextFromPool(){
   const key = getPoolKeyForToday();
   const pool = getPoolForToday();
@@ -471,6 +561,7 @@ function nextFromPool(){
   usedIndexes[key] = used;
   saveUsed();
   document.getElementById('blessingText').value = pool[pick];
+  saveCurrentBlessing(pool[pick]);
   updatePoolInfo();
   renderContacts();
 }
@@ -541,6 +632,7 @@ async function editLibMessage(idx){
 async function deleteLibMessage(idx){
   const arr = getLibArray(libDay);
   if(arr.length <= 1){ showToast("Il faut garder au moins un message"); return; }
+  if(!confirmTwice('lib'+libDay+idx, 'Tape encore ✕ pour supprimer ce message')) return;
   arr.splice(idx,1);
   usedIndexes[libDay] = []; // reset rotation since indexes shifted
   await saveLibrary(libDay); await saveUsed();
@@ -591,7 +683,7 @@ async function restoreDefaultGroup(){
     }
   }catch(e){}
 }
-function smsLink(phone, text){ return `sms:${phone}?&body=${encodeURIComponent(text)}`; }
+function smsLink(phone, text){ return `sms:${cleanPhoneForSms(phone)}?&body=${encodeURIComponent(text)}`; }
 function waLink(phone, text){ return `https://wa.me/${cleanDigits(phone)}?text=${encodeURIComponent(text)}`; }
 function channelLink(c){
   const personalized = applyName(document.getElementById('blessingText').value, c.name);
@@ -619,6 +711,7 @@ async function addGroup(){
   renderGroups();
 }
 async function removeGroup(i){
+  if(!confirmTwice('group'+groups[i].id, 'Tape encore ✕ pour supprimer ce groupe (ses proches iront dans « Tous »)')) return;
   const gid = groups[i].id;
   groups.splice(i,1);
   contacts.forEach(c=>{ if(c.groupId===gid) c.groupId='default'; });
@@ -711,12 +804,14 @@ async function removeContact(i){
 }
 
 async function importRows(rows){
-  let added = 0, skipped = 0;
+  let added = 0, skipped = 0, doublons = 0;
+  const existingPhones = new Set(contacts.map(c=>cleanDigits(c.phone)));
   for(const row of rows){
     const name = (row[0]||'').toString().trim();
     const phone = (row[1]||'').toString().trim();
     const groupNameRaw = (row[2]||'').toString().trim();
     if(!name || !phone || name.toLowerCase()==='nom'){ if(name || phone) skipped++; continue; }
+    if(existingPhones.has(cleanDigits(phone))){ doublons++; continue; }
     let groupId = 'default';
     if(groupNameRaw){
       let g = groups.find(g=>g.name.toLowerCase()===groupNameRaw.toLowerCase());
@@ -724,14 +819,15 @@ async function importRows(rows){
       groupId = g.id;
     }
     contacts.push({name, phone, channel:'sms', groupId});
+    existingPhones.add(cleanDigits(phone));
     added++;
   }
   await saveGroups(); await saveContacts();
   renderGroups(); renderContacts();
   if(added === 0){
-    showToast(`Aucun contact valide trouvé (${skipped} ligne(s) ignorée(s)). Vérifie les colonnes Nom,Téléphone,Groupe.`);
+    showToast(`Aucun nouveau contact (${doublons} doublon(s), ${skipped} ligne(s) invalide(s)). Vérifie les colonnes Nom,Téléphone,Groupe.`);
   }else{
-    showToast(`${added} contact(s) importé(s) ✓${skipped ? ' · '+skipped+' ligne(s) ignorée(s)' : ''}`);
+    showToast(`${added} contact(s) importé(s) ✓${doublons ? ' · '+doublons+' doublon(s) ignoré(s)' : ''}${skipped ? ' · '+skipped+' ligne(s) invalide(s)' : ''}`);
   }
 }
 function detectDelimiter(text){
@@ -831,6 +927,7 @@ async function logWater(status){
     log = res && res.value ? JSON.parse(res.value) : [];
   }catch(e){ log = []; }
   log.unshift({ ts: new Date().toISOString(), status });
+  if(log.length > 500) log.length = 500;
   try{ await window.storage.set('waterLog', JSON.stringify(log), false); }catch(e){}
   const labels = {bu:"Bien joué, c'est noté ✓", reporte:"Reporté de 10 minutes ⏰", ignore:"Rappel ignoré, pas de souci"};
   showToast(labels[status]);
@@ -894,6 +991,7 @@ async function logSend(name, channel, status){
     log = res && res.value ? JSON.parse(res.value) : [];
   }catch(e){ log = []; }
   log.unshift({ ts: new Date().toISOString(), name, channel, status: status || 'ouvert' });
+  if(log.length > 500) log.length = 500;
   try{ await window.storage.set('sendLog', JSON.stringify(log), false); }catch(e){}
 }
 
@@ -1102,7 +1200,7 @@ function renderClientPicker(){
       <div class="row" style="${active?'border-color:var(--gold);':''}cursor:pointer;" onclick="selectClient('${c.id}')">
         <div>
           <div class="row-name">${escapeHtml(c.name)}</div>
-          <div class="row-sub">Doit : ${fmtFCFA(Math.max(0,t.reliquat))}</div>
+          <div class="row-sub">${t.reliquat >= 0 ? 'Doit : '+fmtFCFA(t.reliquat) : 'Avance : '+fmtFCFA(-t.reliquat)}</div>
         </div>
         <button class="icon-btn danger" onclick="event.stopPropagation();removeSolarClient('${c.id}')">✕</button>
       </div>
@@ -1118,6 +1216,9 @@ function renderClientAccount(){
   const lines = solarLines.filter(l=>l.clientId===selectedClientId);
   const payments = solarPayments.filter(p=>p.clientId===selectedClientId);
   const t = clientTotals(selectedClientId);
+  const soldeRow = t.reliquat >= 0
+    ? `<div class="row" style="background:rgba(181,101,79,0.1);"><div class="row-name">Solde dû par le client</div><div class="row-name" style="color:#E3A392;">${fmtFCFA(t.reliquat)}</div></div>`
+    : `<div class="row" style="background:rgba(63,167,114,0.1);"><div class="row-name">Avance du client (trop-perçu)</div><div class="row-name" style="color:#8FD9AE;">${fmtFCFA(-t.reliquat)}</div></div>`;
 
   el.innerHTML = `
     <h2>📒 Compte de ${escapeHtml(client.name)}</h2>
@@ -1129,7 +1230,7 @@ function renderClientAccount(){
     <div class="row"><div class="row-name">Total achat</div><div class="row-name">${fmtFCFA(t.totalAchat)}</div></div>
     <div class="row" style="background:rgba(217,164,65,0.1);"><div class="row-name">Bénéfice</div><div class="row-name" style="color:var(--gold-soft);">${fmtFCFA(t.totalBenefice)}</div></div>
     <div class="row" style="background:rgba(63,167,114,0.1);"><div class="row-name">Déjà payé par le client</div><div class="row-name" style="color:#8FD9AE;">${fmtFCFA(t.totalPaye)}</div></div>
-    <div class="row" style="background:rgba(181,101,79,0.1);"><div class="row-name">Solde dû par le client</div><div class="row-name" style="color:#E3A392;">${fmtFCFA(Math.max(0,t.reliquat))}</div></div>
+    ${soldeRow}
 
     <h2 style="margin-top:16px;">Produits</h2>
     <div id="lineList"></div>
@@ -1210,6 +1311,7 @@ async function addSolarLine(){
   showToast('Ajouté ✓');
 }
 async function deleteSolarLine(id){
+  if(!confirmTwice('line'+id, 'Tape encore ✕ pour supprimer ce produit (définitif)')) return;
   solarLines = solarLines.filter(l=>l.id!==id);
   await saveSolarLines();
   renderClientAccount(); renderClientPicker(); updateSolarSummary();
@@ -1242,6 +1344,7 @@ async function addSolarPayment(){
   showToast('Paiement enregistré ✓');
 }
 async function deleteSolarPayment(id){
+  if(!confirmTwice('pay'+id, 'Tape encore ✕ pour supprimer ce paiement (définitif)')) return;
   solarPayments = solarPayments.filter(p=>p.id!==id);
   await saveSolarPayments();
   renderClientAccount(); renderClientPicker(); updateSolarSummary();
@@ -1275,7 +1378,6 @@ function renderArticleSearch(){
     grouped[key].totalAchat += l.quantite*l.puAchat;
   });
   el.innerHTML = Object.values(grouped).map(g=>{
-    const client = matches.find(l=>l.produit.toLowerCase()===g.produit.toLowerCase());
     return `<div class="hist-item">
       <div class="hd"><span>${escapeHtml(g.produit)}</span><span>Qté totale : ${g.quantite}</span></div>
       Vente totale ${fmtFCFA(g.totalVente)} · Achat total ${fmtFCFA(g.totalAchat)} · <b style="color:#E8C170;">Bénéfice ${fmtFCFA(g.totalVente-g.totalAchat)}</b>
@@ -1283,52 +1385,245 @@ function renderArticleSearch(){
   }).join('');
 }
 
-/* ---------- Backup & restore ---------- */
-const ALL_STORAGE_KEYS = ['contacts','groups','solarClients','solarLines','solarPayments',
+/* ---------- Sauvegarde minutieuse ---------- */
+const DATA_KEYS = ['contacts','groups','solarClients','solarLines','solarPayments',
   'shoppingList','taskList','libMonday','libFriday','waterLog','sendLog','usedIndexes',
-  'waterPrefs','defaultGroup','trash'];
-
-async function exportAllData(){
+  'waterPrefs','defaultGroup','trash','currentBlessing'];
+const KEY_TYPES = {
+  contacts:'array', groups:'array', solarClients:'array', solarLines:'array', solarPayments:'array',
+  shoppingList:'array', taskList:'array', libMonday:'array', libFriday:'array',
+  waterLog:'array', sendLog:'array', trash:'array',
+  usedIndexes:'object', waterPrefs:'object', currentBlessing:'object', defaultGroup:'string'
+};
+function typeOk(key, val){
+  const t = KEY_TYPES[key];
+  if(t==='array') return Array.isArray(val);
+  if(t==='object') return !!val && typeof val==='object' && !Array.isArray(val);
+  if(t==='string') return typeof val==='string';
+  return false;
+}
+async function collectAllData(){
   const data = {};
-  for(const key of ALL_STORAGE_KEYS){
+  for(const key of DATA_KEYS){
     try{
       const r = await window.storage.get(key, false);
-      data[key] = r && r.value ? JSON.parse(r.value) : null;
+      if(r && r.value){
+        data[key] = key==='defaultGroup' ? r.value : JSON.parse(r.value);
+      }else data[key] = null;
     }catch(e){ data[key] = null; }
   }
-  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  return data;
+}
+function summarizeData(data){
+  const n = k => (Array.isArray(data[k]) ? data[k].length : 0);
+  return {
+    proches:n('contacts'), groupes:n('groups'), clients:n('solarClients'),
+    produits:n('solarLines'), paiements:n('solarPayments'),
+    messages:n('libMonday')+n('libFriday'),
+    courses:n('shoppingList'), taches:n('taskList')
+  };
+}
+function fmtCounts(c){
+  return `${c.proches} proche(s) · ${c.groupes} groupe(s)\n${c.clients} client(s) · ${c.produits} produit(s) · ${c.paiements} paiement(s)\n${c.messages} message(s) de bénédiction · ${c.courses} course(s) · ${c.taches} tâche(s)`;
+}
+function sanitizeBackupData(raw){
+  const clean = {};
+  let kept = 0;
+  for(const key of DATA_KEYS){
+    if(raw && raw[key]!==undefined && raw[key]!==null && typeOk(key, raw[key])){
+      clean[key] = raw[key]; kept++;
+    }
+  }
+  return kept>0 ? clean : null;
+}
+async function writeBackupData(data){
+  for(const key of DATA_KEYS){
+    if(data[key]!==undefined && data[key]!==null){
+      const value = key==='defaultGroup' ? data[key] : JSON.stringify(data[key]);
+      await window.storage.set(key, value, false);
+    }
+  }
+}
+function downloadBlob(content, filename, mime){
+  const blob = new Blob([content], {type:mime||'application/json'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = url;
-  const dateStr = new Date().toISOString().slice(0,10);
-  a.download = `sante_sauvegarde_${dateStr}.json`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
   setTimeout(()=>URL.revokeObjectURL(url), 5000);
-  showToast('Sauvegarde téléchargée ✓');
+}
+async function exportAllData(){
+  const data = await collectAllData();
+  const backup = { app:'sante', format:2, exportedAt:new Date().toISOString(), counts:summarizeData(data), data };
+  const json = JSON.stringify(backup, null, 2);
+  const filename = `sante_sauvegarde_${new Date().toISOString().slice(0,10)}.json`;
+  let done = false;
+  if(navigator.canShare){
+    try{
+      const file = new File([json], filename, {type:'application/json'});
+      if(navigator.canShare({files:[file]})){
+        await navigator.share({files:[file], title:'Sauvegarde Santé'});
+        done = true;
+      }
+    }catch(e){
+      if(e && e.name==='AbortError'){ showToast('Export annulé'); return; }
+    }
+  }
+  if(!done) downloadBlob(json, filename, 'application/json');
+  try{ await window.storage.set('lastBackup', new Date().toISOString(), false); }catch(e){}
+  renderBackupUI();
+  showToast('Sauvegarde exportée ✓ Garde le fichier en lieu sûr');
 }
 
+/* --- Restauration : aperçu, vérification, filet de sécurité --- */
+let pendingRestore = null;
+function parseBackup(text){
+  const obj = JSON.parse(text);
+  let raw, exportedAt = null;
+  if(obj && obj.app==='sante' && obj.data && typeof obj.data==='object'){
+    raw = obj.data; exportedAt = obj.exportedAt || null;
+  }else if(obj && typeof obj==='object' && DATA_KEYS.some(k=> obj[k]!==undefined)){
+    raw = obj; // ancien format de sauvegarde
+  }else{
+    throw new Error('format inconnu');
+  }
+  const clean = sanitizeBackupData(raw);
+  if(!clean) throw new Error('sauvegarde vide');
+  return {data:clean, exportedAt, counts:summarizeData(clean)};
+}
 function importAllData(evt){
   const file = evt.target.files[0];
   if(!file) return;
   const reader = new FileReader();
-  reader.onload = async ()=>{
+  reader.onload = ()=>{
     try{
-      const data = JSON.parse(reader.result);
-      for(const key of ALL_STORAGE_KEYS){
-        if(data[key] !== undefined && data[key] !== null){
-          await window.storage.set(key, JSON.stringify(data[key]), false);
-        }
-      }
-      showToast('Restauration réussie — rechargement...');
-      setTimeout(()=> location.reload(), 1200);
+      const parsed = parseBackup(reader.result);
+      showRestoreConfirm(parsed, `Fichier « ${file.name} »`);
     }catch(err){
-      showToast("Fichier de sauvegarde invalide");
+      showToast("Fichier de sauvegarde invalide ou vide");
     }
+    evt.target.value = '';
   };
   reader.onerror = ()=> showToast("Erreur de lecture du fichier");
   reader.readAsText(file);
+}
+function showRestoreConfirm(parsed, sourceLabel){
+  pendingRestore = parsed;
+  const dateTxt = parsed.exportedAt ? new Date(parsed.exportedAt).toLocaleString('fr-FR') : 'inconnue (ancien format)';
+  document.getElementById('restoreSummary').textContent =
+    `Source : ${sourceLabel}\nDate : ${dateTxt}\n\nContenu :\n${fmtCounts(parsed.counts)}\n\nLes données actuelles seront remplacées, mais gardées en secours : tu pourras revenir en arrière avec « ↩️ Annuler la dernière restauration ».`;
+  document.getElementById('restoreOverlay').classList.add('show');
+}
+function closeRestoreOverlay(){
+  pendingRestore = null;
+  document.getElementById('restoreOverlay').classList.remove('show');
+}
+async function applyPendingRestore(){
+  if(!pendingRestore) return;
+  const parsed = pendingRestore;
+  pendingRestore = null;
+  try{
+    const current = await collectAllData();
+    await window.storage.set('preRestoreSnapshot', JSON.stringify({savedAt:new Date().toISOString(), data:current}), false);
+    await writeBackupData(parsed.data);
+    document.getElementById('restoreOverlay').classList.remove('show');
+    showToast('Restauration réussie — rechargement...');
+    setTimeout(()=> location.reload(), 1200);
+  }catch(err){
+    showToast("Échec de la restauration — rien n'a été perdu");
+  }
+}
+async function undoLastRestore(){
+  if(!confirmTwice('undoRestore', "Tape encore pour revenir à l'état d'avant la restauration")) return;
+  try{
+    const r = await window.storage.get('preRestoreSnapshot', false);
+    if(!r || !r.value){ showToast('Aucune restauration à annuler'); return; }
+    const snap = JSON.parse(r.value);
+    const clean = sanitizeBackupData(snap.data);
+    if(clean) await writeBackupData(clean);
+    try{ await window.storage.delete('preRestoreSnapshot', false); }catch(e2){}
+    showToast("Retour à l'état précédent — rechargement...");
+    setTimeout(()=> location.reload(), 1200);
+  }catch(e){ showToast("Impossible d'annuler"); }
+}
+
+/* --- Copies automatiques quotidiennes (3 jours) --- */
+async function autoSnapshot(){
+  try{
+    let snaps = [];
+    try{
+      const r = await window.storage.get('autoSnapshots', false);
+      snaps = r && r.value ? JSON.parse(r.value) : [];
+    }catch(e){ snaps = []; }
+    const today = new Date().toDateString();
+    if(snaps.length && snaps[0].day === today) return;
+    const data = await collectAllData();
+    snaps.unshift({day:today, savedAt:new Date().toISOString(), counts:summarizeData(data), data});
+    snaps = snaps.slice(0,3);
+    await window.storage.set('autoSnapshots', JSON.stringify(snaps), false);
+  }catch(e){}
+}
+async function restoreSnapshot(index){
+  try{
+    const r = await window.storage.get('autoSnapshots', false);
+    const snaps = r && r.value ? JSON.parse(r.value) : [];
+    const s = snaps[index];
+    if(!s){ showToast('Copie introuvable'); return; }
+    const clean = sanitizeBackupData(s.data);
+    if(!clean){ showToast('Cette copie est vide'); return; }
+    showRestoreConfirm({data:clean, exportedAt:s.savedAt, counts:summarizeData(clean)},
+      'Copie automatique du ' + new Date(s.savedAt).toLocaleDateString('fr-FR'));
+  }catch(e){ showToast('Copie illisible'); }
+}
+
+/* --- État des sauvegardes (bandeau + infos) --- */
+async function renderBackupUI(){
+  let last = null;
+  try{
+    const r = await window.storage.get('lastBackup', false);
+    if(r && r.value) last = new Date(r.value);
+  }catch(e){}
+  const days = last ? Math.floor((Date.now() - last.getTime()) / 86400000) : null;
+  const info = document.getElementById('backupInfo');
+  if(info){
+    info.textContent = last
+      ? `Dernière sauvegarde exportée : ${last.toLocaleString('fr-FR')}${days>=1 ? ' (il y a '+days+' jour(s))' : ''}`
+      : "Aucune sauvegarde exportée pour l'instant.";
+  }
+  const banner = document.getElementById('backupBanner');
+  const bannerText = document.getElementById('backupBannerText');
+  if(banner && bannerText){
+    if(last===null || days>=7){
+      bannerText.textContent = last===null
+        ? '⚠️ Aucune sauvegarde encore — tes données ne vivent que dans ce téléphone.'
+        : `⚠️ Dernière sauvegarde : il y a ${days} jours. Pense à exporter.`;
+      banner.style.display = 'flex';
+    }else{
+      banner.style.display = 'none';
+    }
+  }
+  try{
+    const r = await window.storage.get('preRestoreSnapshot', false);
+    const btn = document.getElementById('undoRestoreBtn');
+    if(btn) btn.style.display = (r && r.value) ? 'inline-block' : 'none';
+  }catch(e){
+    const btn = document.getElementById('undoRestoreBtn');
+    if(btn) btn.style.display = 'none';
+  }
+  try{
+    const r = await window.storage.get('autoSnapshots', false);
+    const snaps = r && r.value ? JSON.parse(r.value) : [];
+    const el = document.getElementById('snapshotList');
+    if(el){
+      el.innerHTML = snaps.length===0 ? '<div class="empty">Aucune copie automatique encore.</div>' :
+        snaps.map((s,i)=>`
+          <div class="hist-item">
+            <div class="hd"><span>🕐 ${new Date(s.savedAt).toLocaleString('fr-FR')}</span><span>${s.counts.proches} proche(s) · ${s.counts.clients} client(s)</span></div>
+            <button class="icon-btn blue" style="margin-top:6px;" onclick="restoreSnapshot(${i})">♻️ Revenir à cette copie</button>
+          </div>
+        `).join('');
+    }
+  }catch(e){}
 }
 
 /* ---------- Trash (corbeille) ---------- */
@@ -1381,6 +1676,7 @@ async function restoreTrashItem(id){
   showToast('Restauré ✓');
 }
 async function purgeTrashItem(id){
+  if(!confirmTwice('purge'+id, 'Tape encore pour supprimer définitivement (irrécupérable)')) return;
   trash = trash.filter(x=>x.id!==id);
   await saveTrash();
   renderTrash();
@@ -1479,7 +1775,9 @@ async function init(){
   document.getElementById('dayTag').textContent = dayLabel();
   await loadLibrary();
   await loadUsed();
-  nextFromPool();
+  const restored = await loadCurrentBlessing();
+  if(!restored) nextFromPool();
+  updatePoolInfo();
   libDay = getPoolKeyForToday();
   document.querySelectorAll('[data-libday]').forEach(t=>t.classList.toggle('active', t.dataset.libday===libDay));
   renderLibrary();
@@ -1489,7 +1787,16 @@ async function init(){
   await loadSolarData();
   await loadTrash();
   updateWaterCount();
-  document.getElementById('blessingText').addEventListener('input', renderContacts);
+  await autoSnapshot();
+  await renderBackupUI();
+  let blessingSaveTimer = null;
+  document.getElementById('blessingText').addEventListener('input', ()=>{
+    renderContacts();
+    clearTimeout(blessingSaveTimer);
+    blessingSaveTimer = setTimeout(()=>{
+      saveCurrentBlessing(document.getElementById('blessingText').value);
+    }, 600);
+  });
 }
 init();
 </script>
