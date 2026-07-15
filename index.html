@@ -164,12 +164,20 @@
       <span class="day-tag" id="dayTag">Aujourd'hui</span>
       <div class="pool-info" id="poolInfo"></div>
       <textarea id="blessingText" spellcheck="false"></textarea>
-      <div class="name-hint">Utilise {Nom} dans le texte : il sera remplacé automatiquement par le prénom de chaque destinataire à l'envoi.</div>
+      <div class="name-hint">Les messages ne contiennent aucun prénom de destinataire : le {Nom} de la bibliothèque est retiré automatiquement à l'envoi.</div>
+      <div class="time-row" style="margin-top:12px;">
+        <label style="min-width:70px;color:#6B6156;">Salutation</label>
+        <input type="text" id="salutationInput" value="Assalam Aleykoum" placeholder="(laisser vide pour aucune)" style="flex:1;background:rgba(36,31,26,0.05);border:1px solid rgba(36,31,26,0.25);border-radius:8px;padding:8px 10px;font-size:13px;color:var(--charcoal);">
+      </div>
       <div class="time-row" style="margin-top:12px;">
         <label style="min-width:70px;color:#6B6156;">Signature</label>
         <input type="text" id="signatureInput" value="Abdoulaye" style="flex:1;background:rgba(36,31,26,0.05);border:1px solid rgba(36,31,26,0.25);border-radius:8px;padding:8px 10px;font-size:13px;color:var(--charcoal);">
       </div>
-      <div class="name-hint">Elle est ajoutée automatiquement à la fin de chaque message envoyé ou copié.</div>
+      <div class="name-hint">La salutation ouvre le message, la signature le termine. Les deux s'appliquent à chaque envoi (guidé, groupé ou copie).</div>
+      <div style="margin-top:12px;padding:12px;border-radius:10px;background:rgba(36,31,26,0.05);border:1px dashed rgba(36,31,26,0.25);">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:var(--rose);font-weight:700;margin-bottom:6px;">Aperçu du message envoyé</div>
+        <div id="msgPreview" style="font-family:'Fraunces',serif;font-size:14px;line-height:1.5;white-space:pre-line;color:var(--charcoal);"></div>
+      </div>
       <div class="card-actions">
         <button class="btn-gold" onclick="nextFromPool()">✨ Suivante (sans répétition)</button>
         <button class="btn-ghost" onclick="copyBlessing()">Copier (générique)</button>
@@ -364,7 +372,7 @@
     <div id="sendHistList"></div>
   </div>
 
-  <div class="footnote" style="margin-top:26px;">Santé · version 2.2 — sélection libre & signature</div>
+  <div class="footnote" style="margin-top:26px;">Santé · version 2.5 — bibliothèque enrichie</div>
 </div>
 
 <div class="overlay" id="overlay">
@@ -486,6 +494,36 @@ let mondayBlessings = [
   "Que cette semaine t'apporte tout ce dont tu as besoin, au moment où tu en as besoin, {Nom}.",
   "{Nom}, que ce début de semaine t'apporte clarté d'esprit et motivation pour atteindre tes objectifs.",
   "Que la bénédiction accompagne chacun de tes pas cette semaine, {Nom}, et que la réussite te suive.",
+  "Que cette semaine s'ouvre sur la paix du cœur et se referme sur la satisfaction du devoir accompli.",
+  "Que tes projets de la semaine trouvent des portes ouvertes et des cœurs bienveillants sur leur chemin.",
+  "Qu'Allah facilite ce qui te semble difficile aujourd'hui, et allège ce qui te pèse.",
+  "Que ton travail de cette semaine soit béni, ton effort récompensé et ta fatigue transformée en réussite.",
+  "Je te souhaite une semaine sans obstacle inutile : la santé pour avancer, la paix pour te reposer.",
+  "Que chaque matin de cette semaine te trouve en bonne santé, et chaque soir en paix avec toi-même.",
+  "Qu'Allah t'accorde la réussite dans ce qui est bon pour toi, et t'éloigne de ce qui te nuirait sans que tu le saches.",
+  "Que la baraka descende sur ton travail, ton commerce et ta maison durant cette semaine.",
+  "Que ce lundi soit le premier jour d'une semaine qui te rapprochera de tes objectifs.",
+  "Que ta journée commence par une bonne intention : c'est déjà la moitié du chemin vers la réussite.",
+  "Qu'Allah te préserve du mal, te garde en bonne santé et fasse de cette semaine une source de bien pour toi et ta famille.",
+  "Que la fatigue de cette semaine soit légère et ses fruits abondants.",
+  "Je prie pour que cette semaine t'apporte de bonnes nouvelles, de bonnes rencontres et de bonnes décisions.",
+  "Que ton cœur reste serein même quand la journée devient lourde : la patience est une force.",
+  "Qu'Allah élargisse ta subsistance cette semaine, et bénisse le peu comme le beaucoup.",
+  "Que cette semaine te rapproche de ceux qui te veulent du bien, et t'éloigne de ce qui t'épuise.",
+  "Bon courage pour cette semaine : que chaque effort soit compté et que rien ne soit perdu.",
+  "Que ta maison soit paisible, ton travail fructueux et ton cœur tranquille durant ces sept jours.",
+  "Qu'Allah guide tes choix cette semaine, surtout ceux que tu devras prendre seul.",
+  "Que cette semaine t'apporte la force de recommencer là où tu t'étais arrêté.",
+  "Je te souhaite une semaine de santé, de paix et de subsistance licite.",
+  "Que ce début de semaine efface la fatigue de la précédente et ouvre une page plus belle.",
+  "Qu'Allah bénisse ton temps cette semaine et te permette d'en faire quelque chose d'utile.",
+  "Que tes soucis diminuent, que tes solutions se multiplient, et que ta semaine soit douce.",
+  "Que la lumière de ce lundi éclaire les jours qui suivent, jusqu'au repos du week-end.",
+  "Qu'Allah t'accorde la santé du corps, la paix de l'esprit et la sérénité du cœur cette semaine.",
+  "Que cette semaine soit remplie de petites victoires qui, ensemble, feront une grande réussite.",
+  "Je prie pour que ta semaine soit protégée de tout mal, visible comme invisible.",
+  "Que tes proches soient en bonne santé, ton travail béni et ton cœur en paix durant cette semaine.",
+  "Que chaque difficulté de cette semaine trouve sa solution avant même de devenir un souci.",
 ];
 let fridayBlessings = [
   "{Nom}, une semaine s'achève, portée par la grâce. Merci pour tout ce que tu as accompli — que ton week-end soit un vrai repos pour le corps et pour le cœur, entouré de paix et d'amour.",
@@ -502,6 +540,32 @@ let fridayBlessings = [
   "Que ce vendredi soit pour toi une pause bienvenue {Nom}, un moment de gratitude, et le début d'un week-end paisible et heureux.",
   "{Nom}, que cette fin de semaine t'offre l'occasion de te reconnecter à l'essentiel : ta foi, ta famille, ton repos.",
   "Que la miséricorde de ce vendredi enveloppe ta maison {Nom}, et que ton week-end soit exempt de soucis.",
+  "Que ce vendredi lave la fatigue de la semaine et remplisse ton cœur de paix.",
+  "Qu'Allah accepte tes efforts de cette semaine, pardonne tes manquements et bénisse ton repos.",
+  "Que la miséricorde de ce vendredi t'enveloppe, toi et toute ta maison.",
+  "Que ce jour béni t'apporte pardon, paix et sérénité.",
+  "Que ton week-end soit un vrai repos : pour le corps, pour le cœur et pour l'esprit.",
+  "Qu'Allah bénisse la semaine écoulée et rende la suivante encore meilleure.",
+  "Que ce vendredi te rende la paix intérieure que l'agitation de la semaine t'a prise.",
+  "Que ce jour soit l'occasion de souffler, de remercier et de te reposer auprès des tiens.",
+  "Qu'Allah te récompense pour la patience dont tu as fait preuve cette semaine.",
+  "Que ta fin de semaine soit paisible, tes nuits reposantes et tes journées légères.",
+  "Que ce vendredi apporte la guérison à ceux qui souffrent et le réconfort à ceux qui sont fatigués.",
+  "Qu'Allah protège ta famille, élargisse ta subsistance et apaise ton cœur en ce jour béni.",
+  "Que ce vendredi soit un moment de gratitude pour tout ce que tu as reçu cette semaine, même le plus petit.",
+  "Que la paix de ce jour te suive jusqu'au lundi prochain.",
+  "Que ton week-end t'offre du temps pour toi, du temps pour les tiens et du temps pour ton cœur.",
+  "Qu'Allah fasse de ce vendredi une source de bénédictions pour toi et ceux que tu aimes.",
+  "Que la semaine se termine en paix et que la prochaine commence en force.",
+  "Que ce jour t'apporte le pardon de ce qui est passé et la sérénité pour ce qui vient.",
+  "Que ton cœur trouve le repos ce vendredi, loin du bruit et des soucis.",
+  "Qu'Allah accepte tes prières, exauce tes bonnes intentions et bénisse ta maison en ce jour.",
+  "Que ce week-end te redonne l'énergie que la semaine t'a prise.",
+  "Que la fin de cette semaine soit douce et que ses fatigues soient récompensées.",
+  "Qu'Allah t'accorde un vendredi paisible, un week-end reposant et un cœur reconnaissant.",
+  "Que ce vendredi soit béni : santé pour ton corps, paix pour ton âme, baraka pour ta maison.",
+  "Que tes soucis restent derrière toi ce week-end, et que la sérénité prenne leur place.",
+  "Que la lumière de ce vendredi éclaire ta maison et réchauffe ton cœur.",
 ];
 const defaultMondayBlessings = mondayBlessings.slice();
 const defaultFridayBlessings = fridayBlessings.slice();
@@ -522,6 +586,34 @@ async function saveLibrary(key){
   }catch(e){ showToast('Erreur de sauvegarde'); }
 }
 
+/* Ajoute à la bibliothèque les nouveaux messages livrés avec une mise à jour,
+   sans faire réapparaître ceux que tu as supprimés toi-même. */
+async function mergeNewDefaults(){
+  let seeded = null;
+  try{
+    const r = await window.storage.get('seededDefaults', false);
+    if(r && r.value) seeded = JSON.parse(r.value);
+  }catch(e){}
+  if(!seeded || !Array.isArray(seeded.monday) || !Array.isArray(seeded.friday)){
+    seeded = {monday:[], friday:[]};
+  }
+  let addedM = 0, addedF = 0;
+  defaultMondayBlessings.forEach(t=>{
+    if(!seeded.monday.includes(t) && !mondayBlessings.includes(t)){ mondayBlessings.push(t); addedM++; }
+  });
+  defaultFridayBlessings.forEach(t=>{
+    if(!seeded.friday.includes(t) && !fridayBlessings.includes(t)){ fridayBlessings.push(t); addedF++; }
+  });
+  if(addedM) await saveLibrary('monday');
+  if(addedF) await saveLibrary('friday');
+  try{
+    await window.storage.set('seededDefaults', JSON.stringify({
+      monday: defaultMondayBlessings.slice(), friday: defaultFridayBlessings.slice()
+    }), false);
+  }catch(e){}
+  if(addedM + addedF > 0) showToast(`${addedM + addedF} nouvelle(s) bénédiction(s) ajoutée(s) ✓`);
+}
+
 function getPoolKeyForToday(){ return new Date().getDay() === 5 ? 'friday' : 'monday'; }
 function getPoolForToday(){ return getPoolKeyForToday()==='friday' ? fridayBlessings : mondayBlessings; }
 function dayLabel(){
@@ -534,20 +626,56 @@ function applyName(text, name){
 
 /* ---------- Signature ajoutée à la fin de chaque message ---------- */
 let signature = 'Abdoulaye';
+let salutation = 'Assalam Aleykoum';
+
+/* Construit le message final : salutation, corps sans prénom, puis signature.
+   Le prénom du destinataire n'apparaît nulle part : le {Nom} de la
+   bibliothèque est retiré, avec la ponctuation orpheline qu'il laisse. */
+function stripName(text, dropGreeting){
+  let t = text;
+  if(dropGreeting){
+    t = t.replace(/^\s*(?:bonjour|bonsoir|salut|bon lundi|bon vendredi|bon début de semaine|lundi béni|vendredi béni)?[\s,]*\{Nom\}[\s,!:.\u2014-]*/i, '');
+  }
+  t = t.split(/[\s,]*\{Nom\}/).join('');
+  t = t.replace(/^[\s,!:;.\u2014-]+/, '');
+  t = t.trim();
+  if(t) t = t.charAt(0).toUpperCase() + t.slice(1);
+  return t;
+}
+function buildMessage(bodyRaw){
+  const sal = (salutation||'').trim();
+  const body = stripName(bodyRaw, !!sal);
+  return sal ? sal + ',\n\n' + body : body;
+}
 function withSignature(text){
   const s = (signature||'').trim();
   return s ? text + '\n\n' + s : text;
 }
+function finalMessage(bodyRaw){ return withSignature(buildMessage(bodyRaw)); }
 async function loadSignature(){
   try{
     const r = await window.storage.get('signature', false);
     if(r && typeof r.value === 'string') signature = r.value;
   }catch(e){}
+  try{
+    const r = await window.storage.get('salutation', false);
+    if(r && typeof r.value === 'string') salutation = r.value;
+  }catch(e){}
   const inp = document.getElementById('signatureInput');
   if(inp) inp.value = signature;
+  const sal = document.getElementById('salutationInput');
+  if(sal) sal.value = salutation;
 }
 async function saveSignature(){
   try{ await window.storage.set('signature', signature, false); }catch(e){}
+}
+async function saveSalutation(){
+  try{ await window.storage.set('salutation', salutation, false); }catch(e){}
+}
+function renderPreview(){
+  const el = document.getElementById('msgPreview');
+  if(!el) return;
+  el.textContent = finalMessage(document.getElementById('blessingText').value);
 }
 
 let usedIndexes = { monday: [], friday: [] };
@@ -603,6 +731,7 @@ function nextFromPool(){
   saveCurrentBlessing(pool[pick]);
   updatePoolInfo();
   renderContacts();
+  renderPreview();
 }
 function updatePoolInfo(){
   const key = getPoolKeyForToday();
@@ -612,7 +741,7 @@ function updatePoolInfo(){
     `Bibliothèque du ${key==='friday'?'vendredi':'lundi'} : ${used}/${pool.length} déjà utilisées ce cycle (rotation sans répétition).`;
 }
 function copyBlessing(){
-  const text = withSignature(applyName(document.getElementById('blessingText').value, ''));
+  const text = finalMessage(document.getElementById('blessingText').value);
   navigator.clipboard.writeText(text).then(()=>showToast('Texte copié ✓')).catch(()=>showToast("Impossible de copier"));
 }
 function showToast(msg){
@@ -725,7 +854,7 @@ async function restoreDefaultGroup(){
 function smsLink(phone, text){ return `sms:${cleanPhoneForSms(phone)}?&body=${encodeURIComponent(text)}`; }
 function waLink(phone, text){ return `https://wa.me/${cleanDigits(phone)}?text=${encodeURIComponent(text)}`; }
 function channelLink(c){
-  const personalized = withSignature(applyName(document.getElementById('blessingText').value, c.name));
+  const personalized = finalMessage(document.getElementById('blessingText').value);
   return c.channel === 'wa' ? waLink(c.phone, personalized) : smsLink(c.phone, personalized);
 }
 
@@ -974,7 +1103,7 @@ function sendGroupSms(){
   const waCount = list.filter(c=>c.channel==='wa').length;
   list = list.filter(c=>c.channel!=='wa');
   if(list.length===0){ showToast("Aucun proche en SMS dans ce groupe (WhatsApp n'accepte pas l'envoi groupé par lien)"); return; }
-  const text = withSignature(applyName(document.getElementById('blessingText').value, ''));
+  const text = finalMessage(document.getElementById('blessingText').value);
   const numbers = list.map(c=>cleanPhoneForSms(c.phone)).join(',');
   list.forEach(c=>logSend(c.name, 'sms', 'ouvert'));
   if(waCount>0) showToast(`${waCount} proche(s) WhatsApp non inclus — utilise l'envoi guidé pour eux`);
@@ -1479,12 +1608,13 @@ function renderArticleSearch(){
 /* ---------- Sauvegarde minutieuse ---------- */
 const DATA_KEYS = ['contacts','groups','solarClients','solarLines','solarPayments',
   'shoppingList','taskList','libMonday','libFriday','waterLog','sendLog','usedIndexes',
-  'waterPrefs','defaultGroup','trash','currentBlessing','signature'];
+  'waterPrefs','defaultGroup','trash','currentBlessing','signature','salutation','seededDefaults'];
+const RAW_STRING_KEYS = ['defaultGroup','signature','salutation'];
 const KEY_TYPES = {
   contacts:'array', groups:'array', solarClients:'array', solarLines:'array', solarPayments:'array',
   shoppingList:'array', taskList:'array', libMonday:'array', libFriday:'array',
   waterLog:'array', sendLog:'array', trash:'array',
-  usedIndexes:'object', waterPrefs:'object', currentBlessing:'object', defaultGroup:'string', signature:'string'
+  usedIndexes:'object', waterPrefs:'object', currentBlessing:'object', defaultGroup:'string', signature:'string', salutation:'string', seededDefaults:'object'
 };
 function typeOk(key, val){
   const t = KEY_TYPES[key];
@@ -1499,7 +1629,7 @@ async function collectAllData(){
     try{
       const r = await window.storage.get(key, false);
       if(r && r.value){
-        data[key] = (key==='defaultGroup' || key==='signature') ? r.value : JSON.parse(r.value);
+        data[key] = RAW_STRING_KEYS.includes(key) ? r.value : JSON.parse(r.value);
       }else data[key] = null;
     }catch(e){ data[key] = null; }
   }
@@ -1530,7 +1660,7 @@ function sanitizeBackupData(raw){
 async function writeBackupData(data){
   for(const key of DATA_KEYS){
     if(data[key]!==undefined && data[key]!==null){
-      const value = (key==='defaultGroup' || key==='signature') ? data[key] : JSON.stringify(data[key]);
+      const value = RAW_STRING_KEYS.includes(key) ? data[key] : JSON.stringify(data[key]);
       await window.storage.set(key, value, false);
     }
   }
@@ -1865,6 +1995,7 @@ function generateSupplierStatement(clientId){
 async function init(){
   document.getElementById('dayTag').textContent = dayLabel();
   await loadLibrary();
+  await mergeNewDefaults();
   await loadUsed();
   const restored = await loadCurrentBlessing();
   if(!restored) nextFromPool();
@@ -1884,6 +2015,7 @@ async function init(){
   let blessingSaveTimer = null;
   document.getElementById('blessingText').addEventListener('input', ()=>{
     renderContacts();
+    renderPreview();
     clearTimeout(blessingSaveTimer);
     blessingSaveTimer = setTimeout(()=>{
       saveCurrentBlessing(document.getElementById('blessingText').value);
@@ -1896,7 +2028,18 @@ async function init(){
     clearTimeout(sigTimer);
     sigTimer = setTimeout(saveSignature, 600);
     renderContacts();
+    renderPreview();
   });
+  const salInput = document.getElementById('salutationInput');
+  let salTimer = null;
+  salInput.addEventListener('input', ()=>{
+    salutation = salInput.value;
+    clearTimeout(salTimer);
+    salTimer = setTimeout(saveSalutation, 600);
+    renderContacts();
+    renderPreview();
+  });
+  renderPreview();
 }
 init();
 </script>
