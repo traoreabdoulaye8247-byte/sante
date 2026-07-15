@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Santé 🥃</title>
+<title>Santé 💧</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -138,7 +138,7 @@
 </head>
 <body>
 <div class="wrap">
-  <div class="eyebrow">Santé 🥃</div>
+  <div class="eyebrow">Santé 💧</div>
   <h1>Bénédictions & Bien-être</h1>
   <div class="subtitle">Rappels d'eau, bénédictions du jour, proches et historique.</div>
   <div class="sunrise"></div>
@@ -188,10 +188,10 @@
       <h2 style="margin-bottom:2px;">Envoi guidé automatique</h2>
       <p>Choisis un groupe puis lance l'envoi : {Nom} est remplacé pour chaque personne, un tap "Ouvrir" suffit, et tu confirmes si l'envoi a réussi.</p>
       <select id="groupFilter" onchange="onGroupFilterChange()" style="margin-bottom:10px;width:100%;padding:9px;"></select>
-      <button class="btn-big" onclick="startGuidedSend()">🚀 Envoyer au groupe sélectionné</button>
-      <button class="btn-ghost" style="width:100%;margin-top:8px;" onclick="openPickOverlay()">☑️ Ou choisir des proches précis</button>
-      <button class="btn-ghost" style="width:100%;margin-top:8px;" onclick="sendGroupSms()">⚡ SMS groupé : un seul message pour tout le groupe</button>
-      <p style="margin-top:10px;font-size:11px;color:#8B93AC;">SMS groupé = un seul tap, mais sans prénom ({Nom} devient « toi ») et, selon les réglages, les destinataires peuvent se voir entre eux. L'envoi guidé reste le plus personnel.</p>
+      <button class="btn-big" onclick="sendGroupSms()">⚡ Un seul message pour tout le groupe</button>
+      <button class="btn-ghost" style="width:100%;margin-top:8px;" onclick="startGuidedSend()">🚀 Envoi guidé (un par un, avec suivi)</button>
+      <button class="btn-ghost" style="width:100%;margin-top:8px;" onclick="openPickOverlay()">☑️ Choisir des proches précis</button>
+      <p style="margin-top:10px;font-size:11px;color:#8B93AC;">⚡ prépare UN message avec tous les numéros : tu tapes une seule fois sur Envoyer dans Messages. Pour que chacun le reçoive séparément, désactive « Messagerie de groupe » dans Réglages → Messages. Les proches réglés sur WhatsApp ne sont pas inclus (utilise une liste de diffusion WhatsApp, ou l'envoi guidé).</p>
     </div>
 
     <div class="footnote">
@@ -279,17 +279,30 @@
   <!-- TOUT -->
   <div class="panel" id="panel-tout">
     <h2>📅 Programme du jour</h2>
-    <div class="section-sub">Référence de tes rappels iPhone (non modifiable ici — pour les changer, demande-moi dans le chat).</div>
-    <div class="row"><div class="row-name">🕌 Fajr</div><div class="row-sub">4h55</div></div>
-    <div class="row"><div class="row-name">💧 Eau (matin)</div><div class="row-sub">8h00</div></div>
-    <div class="row"><div class="row-name">🕌 Dhuhr</div><div class="row-sub">13h30</div></div>
-    <div class="row"><div class="row-name">💧 Eau (midi)</div><div class="row-sub">12h30</div></div>
-    <div class="row"><div class="row-name">🕌 Asr</div><div class="row-sub">16h02</div></div>
-    <div class="row"><div class="row-name">💧 Eau (soir)</div><div class="row-sub">18h00</div></div>
-    <div class="row"><div class="row-name">🕌 Maghrib</div><div class="row-sub">19h02</div></div>
-    <div class="row"><div class="row-name">🙏 Bénédiction</div><div class="row-sub">Lun/Ven 6h00</div></div>
-    <div class="row"><div class="row-name">🕌 Isha</div><div class="row-sub">20h15</div></div>
-    <div class="row"><div class="row-name">🌙 Avant de dormir</div><div class="row-sub">22h30</div></div>
+    <div class="section-sub">Heures de prière calculées pour ta position, recalculées chaque jour. Les rappels iPhone eux-mêmes se règlent dans le chat.</div>
+    <div id="programmeList"></div>
+
+    <div class="prefs-box">
+      <h2 style="margin-bottom:6px;">Réglage des heures de prière</h2>
+      <div class="section-sub">Ajuste la convention et, si ta mosquée prie plus tard, mets un décalage en minutes (ex. +50 pour Dhuhr).</div>
+      <div class="time-row"><label style="min-width:90px;">Convention</label>
+        <select id="prayerConvention" style="flex:1;"></select></div>
+      <div class="time-row"><label style="min-width:90px;">Méthode Asr</label>
+        <select id="prayerAsr" style="flex:1;">
+          <option value="1">Majorité (Shafi'i, Maliki, Hanbali)</option>
+          <option value="2">Hanafite</option>
+        </select></div>
+      <div class="time-row"><label style="min-width:90px;">Latitude</label><input type="text" inputmode="decimal" step="0.0001" id="prayerLat" style="flex:1;background:rgba(246,241,228,0.08);border:1px solid rgba(246,241,228,0.2);border-radius:8px;padding:6px 8px;color:var(--ivory);font-size:12px;"></div>
+      <div class="time-row"><label style="min-width:90px;">Longitude</label><input type="text" inputmode="decimal" step="0.0001" id="prayerLng" style="flex:1;background:rgba(246,241,228,0.08);border:1px solid rgba(246,241,228,0.2);border-radius:8px;padding:6px 8px;color:var(--ivory);font-size:12px;"></div>
+      <div class="section-sub" style="margin:10px 0 6px;">Décalage en minutes (0 = heure calculée) :</div>
+      <div class="time-row"><label>Fajr</label><input type="number" id="off_fajr" value="0" style="width:70px;background:rgba(246,241,228,0.08);border:1px solid rgba(246,241,228,0.2);border-radius:8px;padding:6px 8px;color:var(--ivory);font-size:12px;">
+        <label>Dhuhr</label><input type="number" id="off_dhuhr" value="0" style="width:70px;background:rgba(246,241,228,0.08);border:1px solid rgba(246,241,228,0.2);border-radius:8px;padding:6px 8px;color:var(--ivory);font-size:12px;"></div>
+      <div class="time-row"><label>Asr</label><input type="number" id="off_asr" value="0" style="width:70px;background:rgba(246,241,228,0.08);border:1px solid rgba(246,241,228,0.2);border-radius:8px;padding:6px 8px;color:var(--ivory);font-size:12px;">
+        <label>Maghrib</label><input type="number" id="off_maghrib" value="0" style="width:70px;background:rgba(246,241,228,0.08);border:1px solid rgba(246,241,228,0.2);border-radius:8px;padding:6px 8px;color:var(--ivory);font-size:12px;"></div>
+      <div class="time-row"><label>Isha</label><input type="number" id="off_isha" value="0" style="width:70px;background:rgba(246,241,228,0.08);border:1px solid rgba(246,241,228,0.2);border-radius:8px;padding:6px 8px;color:var(--ivory);font-size:12px;"></div>
+      <button class="btn-gold" onclick="savePrayerSettings()">Enregistrer</button>
+      <div class="footnote" style="text-align:left;margin-top:10px;">Calcul astronomique standard. Vérifie une fois avec le calendrier de ta mosquée : un écart de quelques minutes est normal, un gros écart signifie qu'il faut changer la convention.</div>
+    </div>
 
     <h2 style="margin-top:22px;">🛒 Courses</h2>
     <div class="section-sub">Liste indépendante, gérée ici (pas liée à l'app Rappels). Tape sur 🔔 Rappel pour générer un vrai fichier calendrier (.ics) avec alarme — ouvre-le une fois pour l'ajouter à ton Calendrier iPhone.</div>
@@ -307,6 +320,11 @@
       <button class="btn-gold" onclick="addTask()">Ajouter</button>
     </div>
 
+    <h2 style="margin-top:22px;">🔒 Verrouillage</h2>
+    <div class="section-sub">Protège les modifications, suppressions et ajouts côté Solaire (clients, produits, paiements) — ce qui touche tes totaux. La consultation, l'envoi des bénédictions et les listes de courses restent libres.</div>
+    <div class="section-sub" id="lockStatus" style="color:var(--gold-soft);"></div>
+    <div id="lockControls"></div>
+
     <h2 style="margin-top:22px;">💾 Sauvegarde & restauration</h2>
     <div class="section-sub">Exporte toutes tes données dans un fichier à garder en lieu sûr (iCloud, e-mail, WhatsApp à toi-même...). Conseil : une fois par semaine.</div>
     <div class="section-sub" id="backupInfo" style="color:var(--gold-soft);"></div>
@@ -318,13 +336,14 @@
       </label>
     </div>
     <button class="btn-ghost" id="undoRestoreBtn" style="display:none;margin-top:10px;" onclick="undoLastRestore()">↩️ Annuler la dernière restauration</button>
+    <button class="btn-ghost" style="width:100%;margin-top:10px;" onclick="createBackupReminder()">🔔 Me rappeler chaque vendredi de sauvegarder</button>
 
     <h2 style="margin-top:22px;">🕐 Copies automatiques (3 derniers jours)</h2>
     <div class="section-sub">Chaque jour, l'app garde une copie interne de tout — utile en cas de fausse manipulation. Attention : ces copies vivent dans Safari elles aussi ; seul le fichier exporté est une vraie sauvegarde externe.</div>
     <div id="snapshotList"></div>
 
     <h2 style="margin-top:22px;">🗑 Corbeille</h2>
-    <div class="section-sub">Clients et contacts supprimés — récupérables tant qu'ils sont ici.</div>
+    <div class="section-sub">Clients et contacts supprimés — récupérables ici. Les 50 plus récents sont gardés, et tout ce qui dépasse 90 jours est effacé automatiquement.</div>
     <div id="trashList"></div>
   </div>
 
@@ -357,6 +376,19 @@
 
     <div id="clientAccount" style="margin-top:22px;"></div>
 
+    <h2 style="margin-top:26px;">📦 Stock</h2>
+    <div class="section-sub">Ce qu'il te reste en magasin. Quand tu ajoutes un produit au compte d'un client, le stock du même nom baisse automatiquement.</div>
+    <div id="stockAlerts"></div>
+    <input type="text" id="stockSearchInput" placeholder="Rechercher dans le stock..." oninput="renderStock()"
+      style="width:100%;padding:10px 12px;border-radius:9px;background:rgba(246,241,228,0.08);border:1px solid rgba(246,241,228,0.2);color:var(--ivory);font-size:13px;margin-bottom:10px;">
+    <div id="stockList"></div>
+    <div class="add-form" style="flex-direction:column;">
+      <input type="text" id="sNom" placeholder="Nom de l'article (ex: Panneau 580w)">
+      <input type="text" inputmode="decimal" id="sQuantite" placeholder="Quantité en stock">
+      <input type="text" inputmode="decimal" id="sSeuil" placeholder="Seuil d'alerte (ex: 3)">
+      <button class="btn-gold" onclick="addStockItem()">Ajouter au stock</button>
+    </div>
+
     <h2 style="margin-top:26px;">🔍 Tous les articles vendus</h2>
     <div class="section-sub">Recherche un produit (ex: "fil") pour voir tout ce qui a été vendu, tous clients confondus.</div>
     <input type="text" id="articleSearchInput" placeholder="Rechercher un article..." oninput="renderArticleSearch()"
@@ -372,7 +404,7 @@
     <div id="sendHistList"></div>
   </div>
 
-  <div class="footnote" style="margin-top:26px;">Santé · version 2.5 — bibliothèque enrichie</div>
+  <div class="footnote" style="margin-top:26px;">Santé · version 3.4 — contrôles de saisie, factures par période</div>
 </div>
 
 <div class="overlay" id="overlay">
@@ -394,13 +426,73 @@
   </div>
 </div>
 
+<div class="overlay" id="recoveryOverlay">
+  <div class="modal">
+    <div class="progress">Code de secours</div>
+    <div class="who" style="font-size:19px;">Note-le maintenant</div>
+    <div class="via" style="line-height:1.5;">C'est la <b>seule</b> façon de retrouver l'accès si tu oublies ton code. Garde-le ailleurs que dans ce téléphone.</div>
+    <div id="recoveryCodeBox" style="font-family:'Fraunces',serif;font-size:30px;font-weight:600;letter-spacing:0.12em;
+      padding:16px;margin:12px 0;border-radius:12px;background:rgba(217,164,65,0.25);border:2px dashed var(--gold);color:var(--charcoal);">----</div>
+    <div class="step-actions">
+      <button class="confirm-ok" style="padding:12px;border-radius:10px;font-weight:700;" onclick="copyRecoveryCode()">📋 Copier</button>
+      <button class="next-btn" style="cursor:pointer;" onclick="downloadRecoveryCode()">⬇️ Enregistrer dans un fichier</button>
+      <button class="close-btn" onclick="document.getElementById('recoveryOverlay').classList.remove('show')">J'ai noté mon code</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="lineOverlay">
+  <div class="modal" style="max-height:85vh;overflow-y:auto;">
+    <div class="progress">Modifier</div>
+    <div class="who" style="font-size:19px;" id="lineEditTitle">Produit</div>
+    <div class="step-actions" style="text-align:left;">
+      <select id="eCategorie" style="width:100%;padding:11px;border-radius:9px;border:1.5px solid rgba(36,31,26,0.25);background:rgba(36,31,26,0.05);color:var(--charcoal);font-size:14px;">
+        <option value="produit">📦 Produit</option>
+        <option value="soudure">🔧 Main d'œuvre — Soudure</option>
+        <option value="electricite">⚡ Main d'œuvre — Électricité</option>
+        <option value="autre">🛠 Main d'œuvre — Autre</option>
+      </select>
+      <label style="font-size:11px;color:#6B6156;font-weight:600;">Description</label>
+      <input type="text" id="eProduit" style="width:100%;padding:11px;border-radius:9px;border:1.5px solid rgba(36,31,26,0.25);background:rgba(36,31,26,0.05);color:var(--charcoal);font-size:14px;">
+      <label style="font-size:11px;color:#6B6156;font-weight:600;">Quantité</label>
+      <input type="text" inputmode="decimal" id="eQuantite" style="width:100%;padding:11px;border-radius:9px;border:1.5px solid rgba(36,31,26,0.25);background:rgba(36,31,26,0.05);color:var(--charcoal);font-size:14px;">
+      <label style="font-size:11px;color:#6B6156;font-weight:600;">Coût unitaire (ce que tu paies)</label>
+      <input type="text" inputmode="decimal" id="ePuAchat" style="width:100%;padding:11px;border-radius:9px;border:1.5px solid rgba(36,31,26,0.25);background:rgba(36,31,26,0.05);color:var(--charcoal);font-size:14px;">
+      <label style="font-size:11px;color:#6B6156;font-weight:600;">Prix unitaire facturé au client</label>
+      <input type="text" inputmode="decimal" id="ePuVente" style="width:100%;padding:11px;border-radius:9px;border:1.5px solid rgba(36,31,26,0.25);background:rgba(36,31,26,0.05);color:var(--charcoal);font-size:14px;">
+      <label style="font-size:11px;color:#6B6156;font-weight:600;">Montant déjà versé au fournisseur</label>
+      <input type="text" inputmode="decimal" id="eMontantPaye" style="width:100%;padding:11px;border-radius:9px;border:1.5px solid rgba(36,31,26,0.25);background:rgba(36,31,26,0.05);color:var(--charcoal);font-size:14px;">
+      <div id="eSummary" style="font-size:13px;font-weight:700;padding:10px;border-radius:9px;background:rgba(217,164,65,0.18);color:var(--charcoal);"></div>
+      <button class="confirm-ok" style="padding:13px;border-radius:10px;font-weight:700;font-size:14px;" onclick="saveLineEdit()">✅ Enregistrer</button>
+      <button class="close-btn" onclick="closeLineOverlay()">Annuler</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="pinOverlay">
+  <div class="modal">
+    <div class="progress">Verrouillage</div>
+    <div class="who" style="font-size:20px;">Code requis</div>
+    <div class="via" id="pinReason">Modification ou suppression protégée</div>
+    <div class="step-actions">
+      <input type="password" inputmode="numeric" id="pinInput" placeholder="Ton code" onkeydown="if(event.key==='Enter')submitPin()"
+        style="width:100%;text-align:center;font-size:20px;letter-spacing:0.3em;padding:12px;border-radius:10px;border:1.5px solid rgba(36,31,26,0.25);background:rgba(36,31,26,0.05);color:var(--charcoal);">
+      <div id="pinError" style="color:#B5654F;font-size:12px;min-height:16px;font-weight:600;"></div>
+      <button class="confirm-ok" style="padding:13px;border-radius:10px;font-weight:700;font-size:14px;" onclick="submitPin()">🔓 Déverrouiller</button>
+      <button class="next-btn" style="cursor:pointer;" onclick="startRecovery()">J'ai oublié mon code</button>
+      <button class="close-btn" onclick="closePinOverlay(false)">Annuler</button>
+    </div>
+  </div>
+</div>
+
 <div class="overlay" id="pickOverlay">
   <div class="modal" style="max-height:80vh;display:flex;flex-direction:column;">
     <div class="progress">Sélection libre</div>
     <div class="who" style="font-size:19px;">Choisis tes proches</div>
     <div id="pickList" style="overflow-y:auto;text-align:left;margin:10px 0;flex:1;"></div>
     <div class="step-actions">
-      <button class="confirm-ok" id="pickSendBtn" style="padding:13px;border-radius:10px;font-weight:700;font-size:14px;" onclick="startGuidedSendSelection()">🚀 Envoyer (0)</button>
+      <button class="confirm-ok" id="pickSmsBtn" style="padding:13px;border-radius:10px;font-weight:700;font-size:14px;" onclick="sendGroupSmsSelection()">⚡ Un seul message (0)</button>
+      <button class="next-btn" id="pickSendBtn" style="cursor:pointer;" onclick="startGuidedSendSelection()">🚀 Envoi guidé, un par un (0)</button>
       <button class="next-btn" style="cursor:pointer;" onclick="clearSelection()">Tout décocher</button>
       <button class="close-btn" onclick="closePickOverlay()">Fermer</button>
     </div>
@@ -420,8 +512,8 @@
 </div>
 
 <div class="toast" id="toast"></div>
-<button id="fab" onclick="startGuidedSend()" style="position:fixed;bottom:24px;right:20px;width:58px;height:58px;border-radius:50%;
-  background:var(--gold);color:var(--ink-deep);font-size:24px;box-shadow:0 8px 20px rgba(0,0,0,0.35);z-index:40;">🚀</button>
+<button id="fab" onclick="sendGroupSms()" style="position:fixed;bottom:24px;right:20px;width:58px;height:58px;border-radius:50%;
+  background:var(--gold);color:var(--ink-deep);font-size:24px;box-shadow:0 8px 20px rgba(0,0,0,0.35);z-index:40;">⚡</button>
 
 <script>
 /* ---------- Stockage : compatible aperçu Claude ET hébergement web (GitHub Pages) ---------- */
@@ -462,12 +554,480 @@ function confirmTwice(key, msg){
   return false;
 }
 
+/* ---------- Écritures d'historique sérialisées ----------
+   Sans cette file, 12 envois lancés en même temps lisent tous le même
+   historique vide puis s'écrasent : il n'en restait qu'un seul. */
+let writeQueue = Promise.resolve();
+function queueWrite(fn){
+  writeQueue = writeQueue.then(fn, fn);
+  return writeQueue;
+}
+
+/* ---------- Lecture de nombres à la française ----------
+   « 2,5 » -> 2.5 · « 55 000 » -> 55000 · « 1 250,50 » -> 1250.5 */
+function parseNum(v){
+  if(typeof v === 'number') return isNaN(v) ? 0 : v;
+  let s = (v == null ? '' : String(v)).trim();
+  if(!s) return 0;
+  s = s.replace(/[\s\u00A0\u202F\u2009]/g, '');
+  if(s.indexOf(',') > -1){
+    s = s.replace(/\./g, '');
+    s = s.replace(',', '.');
+  }
+  const n = parseFloat(s);
+  return isNaN(n) ? 0 : n;
+}
+
+/* ---------- Heures de prière : calcul astronomique ----------
+   Algorithme standard (position solaire) : déclinaison + équation du temps,
+   puis angle horaire pour chaque prière. Réglages : convention, méthode Asr,
+   et décalage manuel par prière pour coller à l'heure de ta mosquée. */
+const DEG = Math.PI/180;
+function dsin(d){ return Math.sin(d*DEG); }
+function dcos(d){ return Math.cos(d*DEG); }
+function dtan(d){ return Math.tan(d*DEG); }
+function darcsin(x){ return Math.asin(x)/DEG; }
+function darccos(x){ return Math.acos(x)/DEG; }
+function darctan2(y,x){ return Math.atan2(y,x)/DEG; }
+function darccot(x){ return Math.atan2(1,x)/DEG; }
+function fixRange(a,b){ a = a - b*Math.floor(a/b); return a<0 ? a+b : a; }
+function fixAngle(a){ return fixRange(a,360); }
+function fixHour(a){ return fixRange(a,24); }
+
+function julianDay(y,m,d){
+  if(m<=2){ y-=1; m+=12; }
+  const A = Math.floor(y/100);
+  const B = 2 - A + Math.floor(A/4);
+  return Math.floor(365.25*(y+4716)) + Math.floor(30.6001*(m+1)) + d + B - 1524.5;
+}
+function sunPosition(jd){
+  const D = jd - 2451545.0;
+  const g = fixAngle(357.529 + 0.98560028*D);
+  const q = fixAngle(280.459 + 0.98564736*D);
+  const L = fixAngle(q + 1.915*dsin(g) + 0.020*dsin(2*g));
+  const e = 23.439 - 0.00000036*D;
+  const RA = fixHour(darctan2(dcos(e)*dsin(L), dcos(L))/15);
+  return { decl: darcsin(dsin(e)*dsin(L)), eqt: q/15 - RA };
+}
+
+const PRAYER_CONVENTIONS = {
+  mwl:   {label:'Ligue Islamique Mondiale (18° / 17°)', fajr:18,   isha:17},
+  egypt: {label:'Autorité égyptienne (19,5° / 17,5°)',  fajr:19.5, isha:17.5},
+  isna:  {label:'ISNA (15° / 15°)',                     fajr:15,   isha:15},
+  karachi:{label:'Karachi (18° / 18°)',                 fajr:18,   isha:18},
+};
+let prayerSettings = {
+  lat: 12.6392, lng: -8.0029,        // Bamako
+  convention: 'mwl',
+  asrFactor: 1,                       // 1 = majorité, 2 = hanafite
+  offsets: { fajr:0, dhuhr:0, asr:0, maghrib:0, isha:0 }
+};
+
+function computePrayerTimes(date, s){
+  const tz = -date.getTimezoneOffset()/60;
+  const conv = PRAYER_CONVENTIONS[s.convention] || PRAYER_CONVENTIONS.mwl;
+  const jd = julianDay(date.getFullYear(), date.getMonth()+1, date.getDate()) - s.lng/(15*24);
+  const sp = sunPosition(jd + 0.5);
+  const noon = fixHour(12 - sp.eqt);
+  function angleTime(angle, ccw){
+    const cosT = (-dsin(angle) - dsin(sp.decl)*dsin(s.lat)) / (dcos(sp.decl)*dcos(s.lat));
+    if(cosT > 1 || cosT < -1) return NaN;      // soleil qui ne passe jamais cet angle
+    const t = (1/15) * darccos(cosT);
+    return ccw ? noon - t : noon + t;
+  }
+  const asrAngle = -darccot(s.asrFactor + dtan(Math.abs(s.lat - sp.decl)));
+  const raw = {
+    fajr:    angleTime(conv.fajr, true),
+    sunrise: angleTime(0.833, true),
+    dhuhr:   noon,
+    asr:     angleTime(asrAngle, false),
+    maghrib: angleTime(0.833, false),
+    isha:    angleTime(conv.isha, false)
+  };
+  const out = {};
+  Object.keys(raw).forEach(k=>{
+    let h = raw[k] + tz - s.lng/15;
+    if(!isNaN(h)) h += (s.offsets[k]||0)/60;
+    out[k] = h;
+  });
+  return out;
+}
+function fmtHour(h){
+  if(isNaN(h)) return '--:--';
+  h = fixHour(h + 0.5/60);                     // arrondi à la minute
+  const hh = Math.floor(h), mm = Math.floor((h-hh)*60);
+  return pad2(hh) + 'h' + pad2(mm);
+}
+async function loadPrayerSettings(){
+  try{
+    const r = await window.storage.get('prayerSettings', false);
+    if(r && r.value){
+      const p = JSON.parse(r.value);
+      prayerSettings = Object.assign({}, prayerSettings, p);
+      prayerSettings.offsets = Object.assign({fajr:0,dhuhr:0,asr:0,maghrib:0,isha:0}, p.offsets||{});
+    }
+  }catch(e){}
+}
+async function savePrayerSettings(){
+  const s = prayerSettings;
+  s.convention = document.getElementById('prayerConvention').value;
+  s.asrFactor = parseInt(document.getElementById('prayerAsr').value,10) || 1;
+  ['fajr','dhuhr','asr','maghrib','isha'].forEach(k=>{
+    s.offsets[k] = parseInt(document.getElementById('off_'+k).value,10) || 0;
+  });
+  const lat = parseNum(document.getElementById('prayerLat').value);
+  const lng = parseNum(document.getElementById('prayerLng').value);
+  if(!isNaN(lat)) s.lat = lat;
+  if(!isNaN(lng)) s.lng = lng;
+  try{ await window.storage.set('prayerSettings', JSON.stringify(s), false); }catch(e){}
+  renderProgramme();
+  showToast('Heures de prière mises à jour ✓');
+}
+function renderProgramme(){
+  const el = document.getElementById('programmeList');
+  if(!el) return;
+  const t = computePrayerTimes(new Date(), prayerSettings);
+  const items = [
+    {h:t.fajr,    label:'🕌 Fajr'},
+    {h:t.sunrise, label:'🌅 Lever du soleil'},
+    {h:t.dhuhr,   label:'🕌 Dhuhr'},
+    {h:t.asr,     label:'🕌 Asr'},
+    {h:t.maghrib, label:'🕌 Maghrib'},
+    {h:t.isha,    label:'🕌 Isha'}
+  ];
+  const toH = str => { const p = (str||'').split(':'); return parseInt(p[0],10) + (parseInt(p[1],10)||0)/60; };
+  const prefs = {
+    matin: document.getElementById('timeMatin') ? document.getElementById('timeMatin').value : '08:00',
+    midi:  document.getElementById('timeMidi')  ? document.getElementById('timeMidi').value  : '12:30',
+    soir:  document.getElementById('timeSoir')  ? document.getElementById('timeSoir').value  : '18:00'
+  };
+  items.push({h:toH(prefs.matin), label:'💧 Eau (matin)'});
+  items.push({h:toH(prefs.midi),  label:'💧 Eau (midi)'});
+  items.push({h:toH(prefs.soir),  label:'💧 Eau (soir)'});
+  items.push({h:6, label:'🙏 Bénédiction (Lun/Ven)'});
+  items.sort((a,b)=> (isNaN(a.h)?99:a.h) - (isNaN(b.h)?99:b.h));
+  const now = new Date().getHours() + new Date().getMinutes()/60;
+  const next = items.find(i=> !isNaN(i.h) && i.h > now);
+  el.innerHTML = items.map(i=>`
+    <div class="row" style="${next && i===next ? 'border-color:var(--gold);background:rgba(217,164,65,0.12);' : ''}">
+      <div class="row-name">${i.label}</div>
+      <div class="row-sub">${fmtHour(i.h)}${next && i===next ? ' · prochain' : ''}</div>
+    </div>`).join('');
+  const cs = document.getElementById('prayerConvention');
+  if(cs && !cs.dataset.filled){
+    cs.innerHTML = Object.keys(PRAYER_CONVENTIONS).map(k=>`<option value="${k}">${PRAYER_CONVENTIONS[k].label}</option>`).join('');
+    cs.dataset.filled = '1';
+  }
+  if(cs) cs.value = prayerSettings.convention;
+  const as = document.getElementById('prayerAsr');
+  if(as) as.value = String(prayerSettings.asrFactor);
+  ['fajr','dhuhr','asr','maghrib','isha'].forEach(k=>{
+    const o = document.getElementById('off_'+k);
+    if(o) o.value = prayerSettings.offsets[k]||0;
+  });
+  const la = document.getElementById('prayerLat'); if(la) la.value = prayerSettings.lat;
+  const lo = document.getElementById('prayerLng'); if(lo) lo.value = prayerSettings.lng;
+}
+
+/* ---------- Stock ---------- */
+let solarStock = [];        // {id, nom, quantite, seuil}
+let stockMoves = [];        // {id, stockId, nom, delta, motif, date}
+
+async function loadStock(){
+  try{ const r = await window.storage.get('solarStock', false); solarStock = r&&r.value?JSON.parse(r.value):[]; }catch(e){ solarStock = []; }
+  try{ const r = await window.storage.get('stockMoves', false); stockMoves = r&&r.value?JSON.parse(r.value):[]; }catch(e){ stockMoves = []; }
+  renderStock();
+}
+async function saveStock(){ try{ await window.storage.set('solarStock', JSON.stringify(solarStock), false); }catch(e){ showToast('Erreur de sauvegarde'); } }
+async function saveStockMoves(){
+  if(stockMoves.length > 300) stockMoves.length = 300;
+  try{ await window.storage.set('stockMoves', JSON.stringify(stockMoves), false); }catch(e){}
+}
+async function logStockMove(item, delta, motif){
+  stockMoves.unshift({id:'m'+Date.now(), stockId:item.id, nom:item.nom, delta, motif, date:new Date().toISOString()});
+  await saveStockMoves();
+}
+function findStockByName(nom){
+  const key = (nom||'').trim().toLowerCase();
+  return solarStock.find(s=> s.nom.trim().toLowerCase() === key);
+}
+async function addStockItem(){
+  if(!await unlockGate('Ajouter un article au stock')) return;
+  const nom = document.getElementById('sNom').value.trim();
+  const quantite = parseNum(document.getElementById('sQuantite').value);
+  const seuil = parseNum(document.getElementById('sSeuil').value);
+  if(!nom){ showToast("Donne un nom d'article"); return; }
+  if(quantite < 0 || seuil < 0){ showToast('Une quantité ne peut pas être négative'); return; }
+  const existing = findStockByName(nom);
+  if(existing){ showToast(`« ${existing.nom} » existe déjà — utilise + pour le réapprovisionner`); return; }
+  const item = {id:'s'+Date.now(), nom, quantite, seuil};
+  solarStock.push(item);
+  await saveStock();
+  await logStockMove(item, quantite, 'Création');
+  document.getElementById('sNom').value = '';
+  document.getElementById('sQuantite').value = '';
+  document.getElementById('sSeuil').value = '';
+  renderStock();
+  showToast('Article ajouté au stock ✓');
+}
+async function adjustStock(id, delta){
+  const item = solarStock.find(s=>s.id===id);
+  if(!item) return;
+  if(!await unlockGate('Modifier le stock')) return;
+  item.quantite = (item.quantite||0) + delta;
+  await saveStock();
+  await logStockMove(item, delta, delta>0 ? 'Entrée manuelle' : 'Sortie manuelle');
+  renderStock();
+}
+async function setStockQuantity(id){
+  const item = solarStock.find(s=>s.id===id);
+  if(!item) return;
+  if(!await unlockGate('Modifier le stock')) return;
+  const val = prompt(`Quantité en stock pour « ${item.nom} » :`, item.quantite);
+  if(val===null) return;
+  const n = parseNum(val);
+  if(val.trim() !== '' && isNaN(parseFloat(val.replace(',','.')))){ showToast('Nombre non reconnu'); return; }
+  if(n < 0){ showToast('Le stock ne peut pas être négatif'); return; }
+  const delta = n - item.quantite;
+  item.quantite = n;
+  await saveStock();
+  await logStockMove(item, delta, 'Inventaire');
+  renderStock();
+  showToast('Stock corrigé ✓');
+}
+async function removeStockItem(id){
+  const item = solarStock.find(s=>s.id===id);
+  if(!item) return;
+  if(!await unlockGate('Supprimer un article du stock')) return;
+  if(!confirmTwice('stock'+id, `Tape encore ✕ pour retirer « ${item.nom} » du stock`)) return;
+  solarStock = solarStock.filter(s=>s.id!==id);
+  await saveStock();
+  renderStock();
+  showToast('Article retiré du stock');
+}
+function renderStock(){
+  const el = document.getElementById('stockList');
+  if(!el) return;
+  const q = (document.getElementById('stockSearchInput')||{value:''}).value.toLowerCase().trim();
+  const alerts = solarStock.filter(s=> s.quantite <= (s.seuil||0));
+  const alertEl = document.getElementById('stockAlerts');
+  if(alertEl){
+    alertEl.innerHTML = alerts.length===0 ? '' : `
+      <div class="row" style="background:rgba(181,101,79,0.18);border-color:rgba(181,101,79,0.5);">
+        <div class="row-name" style="font-size:12.5px;line-height:1.4;">⚠️ À réapprovisionner : ${alerts.map(a=>escapeHtml(a.nom)+' ('+a.quantite+')').join(' · ')}</div>
+      </div>`;
+  }
+  const filtered = solarStock.filter(s=> !q || s.nom.toLowerCase().includes(q));
+  if(solarStock.length===0){ el.innerHTML = '<div class="empty">Aucun article en stock.</div>'; return; }
+  if(filtered.length===0){ el.innerHTML = '<div class="empty">Aucun résultat.</div>'; return; }
+  el.innerHTML = filtered.map(s=>{
+    const low = s.quantite <= (s.seuil||0);
+    return `
+    <div class="row" style="${low?'border-color:rgba(181,101,79,0.5);':''}">
+      <div>
+        <div class="row-name">${escapeHtml(s.nom)}</div>
+        <div class="row-sub" style="${low?'color:#E3A392;':''}">En stock : ${s.quantite}${s.seuil?' · seuil '+s.seuil:''}${low?' ⚠️':''}</div>
+      </div>
+      <div class="row-actions">
+        <button class="icon-btn" onclick="adjustStock('${s.id}',1)">+1</button>
+        <button class="icon-btn" onclick="adjustStock('${s.id}',-1)">−1</button>
+        <button class="icon-btn blue" onclick="setStockQuantity('${s.id}')">✏️</button>
+        <button class="icon-btn danger" onclick="removeStockItem('${s.id}')">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+let recoveryHash = null;
+let lastRecoveryCode = null;
+
+function generateRecoveryCode(){
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';   // sans I, O, 0, 1 (confusions)
+  const arr = new Uint8Array(8);
+  if(typeof crypto !== 'undefined' && crypto.getRandomValues) crypto.getRandomValues(arr);
+  else for(let i=0;i<8;i++) arr[i] = Math.floor(Math.random()*256);
+  let out = '';
+  for(let i=0;i<8;i++) out += chars[arr[i] % chars.length];
+  return out.slice(0,4) + '-' + out.slice(4);
+}
+function showRecoveryCode(code){
+  lastRecoveryCode = code;
+  document.getElementById('recoveryCodeBox').textContent = code;
+  document.getElementById('recoveryOverlay').classList.add('show');
+}
+function copyRecoveryCode(){
+  if(!lastRecoveryCode) return;
+  navigator.clipboard.writeText('Code de secours Santé : ' + lastRecoveryCode)
+    .then(()=>showToast('Code de secours copié ✓'))
+    .catch(()=>showToast('Impossible de copier — note-le à la main'));
+}
+function downloadRecoveryCode(){
+  if(!lastRecoveryCode) return;
+  const txt = `Code de secours de l'app Santé\n\n${lastRecoveryCode}\n\nCréé le ${new Date().toLocaleString('fr-FR')}.\nIl permet de retirer le verrouillage si tu oublies ton code.\nGarde ce fichier ailleurs que dans le téléphone (iCloud, e-mail).`;
+  const blob = new Blob([txt], {type:'text/plain'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'sante_code_de_secours.txt';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url), 5000);
+  showToast('Fichier enregistré — mets-le en lieu sûr');
+}
+async function startRecovery(){
+  const val = prompt("Entre ton code de secours (celui noté à l'activation) :");
+  if(val === null) return;
+  const clean = val.trim().toUpperCase();
+  const h = await hashPin(clean);
+  if(!recoveryHash || h !== recoveryHash){
+    document.getElementById('pinError').textContent = 'Code de secours incorrect';
+    return;
+  }
+  pinHash = null; recoveryHash = null;
+  try{ await window.storage.delete('pinHash', false); }catch(e){}
+  try{ await window.storage.delete('recoveryHash', false); }catch(e){}
+  unlockedUntil = Date.now() + UNLOCK_MS;
+  closePinOverlay(true);
+  renderLockUI();
+  showToast('Verrouillage retiré ✓ Crée un nouveau code si tu veux le réactiver');
+}
+async function showExistingRecovery(){
+  if(!await unlockGate('Entre ton code pour revoir le code de secours')) return;
+  const code = generateRecoveryCode();
+  recoveryHash = await hashPin(code);
+  try{ await window.storage.set('recoveryHash', recoveryHash, false); }catch(e){}
+  showRecoveryCode(code);
+  showToast('Nouveau code de secours généré — l\'ancien ne marche plus');
+}
+
+/* ---------- Verrouillage (modification & suppression) ---------- */
+let pinHash = null;
+let unlockedUntil = 0;
+const UNLOCK_MS = 5 * 60 * 1000;
+let pinResolve = null;
+
+async function hashPin(txt){
+  const salted = 'sante:' + txt;
+  try{
+    if(crypto && crypto.subtle){
+      const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(salted));
+      return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+    }
+  }catch(e){}
+  let h = 0;
+  for(let i=0;i<salted.length;i++){ h = ((h<<5)-h) + salted.charCodeAt(i); h |= 0; }
+  return 'f' + Math.abs(h).toString(16);
+}
+async function loadPin(){
+  try{
+    const r = await window.storage.get('pinHash', false);
+    pinHash = (r && r.value) ? r.value : null;
+  }catch(e){ pinHash = null; }
+  try{
+    const r = await window.storage.get('recoveryHash', false);
+    recoveryHash = (r && r.value) ? r.value : null;
+  }catch(e){ recoveryHash = null; }
+  renderLockUI();
+}
+function isUnlocked(){ return !pinHash || Date.now() < unlockedUntil; }
+function unlockGate(reason){
+  if(isUnlocked()) return Promise.resolve(true);
+  return new Promise(resolve=>{
+    pinResolve = resolve;
+    document.getElementById('pinReason').textContent = reason || 'Modification ou suppression protégée';
+    document.getElementById('pinInput').value = '';
+    document.getElementById('pinError').textContent = '';
+    document.getElementById('pinOverlay').classList.add('show');
+    setTimeout(()=>{ const el = document.getElementById('pinInput'); if(el) el.focus(); }, 120);
+  });
+}
+async function submitPin(){
+  const val = (document.getElementById('pinInput').value||'').trim();
+  const h = await hashPin(val);
+  if(h === pinHash){
+    unlockedUntil = Date.now() + UNLOCK_MS;
+    closePinOverlay(true);
+    renderLockUI();
+  }else{
+    document.getElementById('pinError').textContent = 'Code incorrect';
+    document.getElementById('pinInput').value = '';
+  }
+}
+function closePinOverlay(ok){
+  document.getElementById('pinOverlay').classList.remove('show');
+  if(pinResolve){ pinResolve(!!ok); pinResolve = null; }
+}
+function renderLockUI(){
+  const status = document.getElementById('lockStatus');
+  const ctrl = document.getElementById('lockControls');
+  if(!status || !ctrl) return;
+  if(!pinHash){
+    status.textContent = 'Aucun code : tout est modifiable librement.';
+    ctrl.innerHTML = `
+      <div class="add-form">
+        <input type="password" inputmode="numeric" id="newPin" placeholder="Nouveau code (4 chiffres minimum)">
+        <button class="btn-gold" onclick="setPin()">Activer</button>
+      </div>`;
+  }else{
+    status.textContent = isUnlocked()
+      ? 'Code actif · déverrouillé pour quelques minutes.'
+      : 'Code actif · modifications et suppressions verrouillées.';
+    ctrl.innerHTML = `
+      <div class="add-form">
+        <input type="password" inputmode="numeric" id="newPin" placeholder="Nouveau code (pour le changer)">
+        <button class="btn-gold" onclick="changePin()">Changer</button>
+      </div>
+      <div class="card-actions">
+        <button class="btn-ghost" onclick="lockNow()">🔒 Verrouiller maintenant</button>
+        <button class="btn-ghost" onclick="showExistingRecovery()">🆘 Nouveau code de secours</button>
+        <button class="btn-ghost" onclick="removePin()">Retirer le verrouillage</button>
+      </div>`;
+  }
+}
+async function setPin(){
+  const val = (document.getElementById('newPin').value||'').trim();
+  if(val.length < 4){ showToast('Choisis un code d\'au moins 4 caractères'); return; }
+  pinHash = await hashPin(val);
+  try{ await window.storage.set('pinHash', pinHash, false); }catch(e){ showToast('Erreur de sauvegarde'); }
+  const code = generateRecoveryCode();
+  recoveryHash = await hashPin(code);
+  try{ await window.storage.set('recoveryHash', recoveryHash, false); }catch(e){}
+  document.getElementById('newPin').value = '';
+  unlockedUntil = Date.now() + UNLOCK_MS;
+  renderLockUI();
+  showRecoveryCode(code);
+}
+async function changePin(){
+  if(!await unlockGate('Entre ton code actuel')) return;
+  const val = (document.getElementById('newPin').value||'').trim();
+  if(val.length < 4){ showToast('Choisis un code d\'au moins 4 caractères'); return; }
+  pinHash = await hashPin(val);
+  try{ await window.storage.set('pinHash', pinHash, false); }catch(e){}
+  document.getElementById('newPin').value = '';
+  renderLockUI();
+  showToast('Code modifié ✓');
+}
+async function removePin(){
+  if(!await unlockGate('Entre ton code pour retirer le verrouillage')) return;
+  if(!confirmTwice('removePin', 'Tape encore pour retirer le verrouillage')) return;
+  pinHash = null; recoveryHash = null;
+  try{ await window.storage.delete('pinHash', false); }catch(e){}
+  try{ await window.storage.delete('recoveryHash', false); }catch(e){}
+  unlockedUntil = 0;
+  renderLockUI();
+  showToast('Verrouillage retiré');
+}
+function lockNow(){
+  unlockedUntil = 0;
+  renderLockUI();
+  showToast('🔒 Verrouillé');
+}
+
 /* ---------- Tabs ---------- */
 function switchTab(name){
   document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.tab===name));
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   document.getElementById('panel-'+name).classList.add('active');
   if(name==='hist') renderHistory();
+  if(name==='tout'){ renderProgramme(); renderBackupUI(); }
 }
 
 /* ---------- Blessing library ({Nom} placeholder, general wording) ---------- */
@@ -524,6 +1084,61 @@ let mondayBlessings = [
   "Je prie pour que ta semaine soit protégée de tout mal, visible comme invisible.",
   "Que tes proches soient en bonne santé, ton travail béni et ton cœur en paix durant cette semaine.",
   "Que chaque difficulté de cette semaine trouve sa solution avant même de devenir un souci.",
+
+  /* --- Travail, commerce, baraka --- */
+  "Qu'Allah bénisse ton travail, facilite tes journées et rende ton effort profitable.",
+  "Que ton commerce soit béni, tes clients fidèles et tes gains licites.",
+  "Qu'Allah ouvre pour toi les portes du travail honnête et ferme celles du souci.",
+  "Que chaque effort que tu fournis aujourd'hui te revienne en bien, multiplié.",
+  "Qu'Allah mette la baraka dans ton temps, dans ton travail et dans tout ce que tu entreprends.",
+  "Que ta main soit celle qui donne, et que ton travail te le permette.",
+  "Qu'Allah fasse de toi une source de bien pour ceux qui travaillent à tes côtés.",
+  "Que tes affaires prospèrent dans l'honnêteté, et que ta réussite reste humble.",
+  "Qu'Allah t'accorde un travail qui nourrit ta famille et apaise ton cœur.",
+  "Que les portes que tu frappes aujourd'hui s'ouvrent, et que celles qui restent fermées cachent un bien pour toi.",
+
+  /* --- Santé --- */
+  "Qu'Allah t'accorde une santé solide, un corps sans douleur et un cœur sans angoisse.",
+  "Que la maladie s'éloigne de ta maison et que la santé y demeure longtemps.",
+  "Qu'Allah guérisse ce qui te fait mal, visible ou caché, et te rende ta force.",
+  "Que ton corps te porte longtemps, et que tes forces te suffisent pour ce qui compte.",
+  "Qu'Allah préserve ta santé et celle de ceux que tu aimes, aujourd'hui et longtemps encore.",
+  "Que chaque respiration soit une grâce, et chaque jour de santé un cadeau que tu reconnais.",
+  "Qu'Allah éloigne de toi la maladie et t'accorde une longue vie dans le bien.",
+
+  /* --- Richesse, prospérité, subsistance --- */
+  "Qu'Allah élargisse ta subsistance par des voies licites, et te suffise par le licite loin de l'illicite.",
+  "Que la richesse vienne à toi sans t'éloigner de ce qui compte vraiment.",
+  "Qu'Allah t'accorde une subsistance abondante et un cœur satisfait : la vraie richesse est celle du cœur.",
+  "Que ta prospérité soit durable, honnête et partagée.",
+  "Qu'Allah bénisse le peu jusqu'à ce qu'il suffise, et le beaucoup jusqu'à ce qu'il profite.",
+  "Que tes revenus augmentent, que tes dettes s'allègent et que ton cœur reste tranquille.",
+  "Qu'Allah te préserve du besoin et te dispense de tendre la main.",
+  "Que la prospérité entre par ta porte et n'en ressorte jamais.",
+
+  /* --- Amour, bonheur, famille --- */
+  "Qu'Allah remplisse ta maison d'amour, de paix et de rires.",
+  "Que ton foyer soit un lieu de repos et ta famille une source de joie.",
+  "Qu'Allah te donne le bonheur qui dure, pas celui qui passe.",
+  "Que l'amour des tiens t'entoure et que la méchanceté des autres ne t'atteigne pas.",
+  "Qu'Allah unisse les cœurs de ta famille et éloigne d'eux la discorde.",
+  "Que ton bonheur soit simple, sincère et durable.",
+  "Qu'Allah te donne un cœur en paix, un foyer paisible et des proches en bonne santé.",
+  "Que la joie te trouve là où tu ne l'attendais pas.",
+
+  /* --- Protection : malchance, méchanceté, envie --- */
+  "Qu'Allah te protège de tout mal, de celui qu'on voit comme de celui qu'on ne voit pas.",
+  "Que la méchanceté des envieux tombe en poussière avant de t'atteindre.",
+  "Qu'Allah te préserve du mauvais œil, de l'envie et des mauvaises langues.",
+  "Que ceux qui te veulent du mal n'aient aucun pouvoir sur toi.",
+  "Qu'Allah éloigne de ta route les pièges, les mauvaises rencontres et les mauvaises intentions.",
+  "Que ta maison soit protégée, ta famille préservée et ton travail à l'abri.",
+  "Qu'Allah te garde de la malchance, du malheur et de tout ce qui pourrait te nuire.",
+  "Que le mal reste loin de toi, et que le bien te trouve où que tu ailles.",
+  "Qu'Allah soit ton protecteur là où personne d'autre ne peut te protéger.",
+  "Que les paroles blessantes ne t'atteignent pas et que les cœurs jaloux ne te nuisent pas.",
+  "Qu'Allah te préserve des soucis avant qu'ils n'arrivent, et te sorte de ceux qui sont déjà là.",
+  "Que chaque jour t'éloigne du mal et te rapproche du bien.",
 ];
 let fridayBlessings = [
   "{Nom}, une semaine s'achève, portée par la grâce. Merci pour tout ce que tu as accompli — que ton week-end soit un vrai repos pour le corps et pour le cœur, entouré de paix et d'amour.",
@@ -566,6 +1181,33 @@ let fridayBlessings = [
   "Que ce vendredi soit béni : santé pour ton corps, paix pour ton âme, baraka pour ta maison.",
   "Que tes soucis restent derrière toi ce week-end, et que la sérénité prenne leur place.",
   "Que la lumière de ce vendredi éclaire ta maison et réchauffe ton cœur.",
+
+  /* --- Vendredi : santé, travail, prospérité, protection --- */
+  "Qu'Allah bénisse ce vendredi : santé pour ton corps, baraka pour ton travail, paix pour ton cœur.",
+  "Que ce jour béni éloigne de toi la maladie, le besoin et la méchanceté.",
+  "Qu'Allah accepte tes prières de ce vendredi et exauce ce que ton cœur n'ose pas demander.",
+  "Que la miséricorde de ce jour couvre ta maison, ton travail et tous ceux que tu aimes.",
+  "Qu'Allah t'accorde en ce vendredi la santé, la subsistance et la paix du cœur.",
+  "Que ce vendredi t'apporte le pardon, et que ton week-end t'apporte le repos.",
+  "Qu'Allah élargisse ta subsistance et bénisse ta semaine à venir dès ce jour béni.",
+  "Que ce jour te préserve du mal, de l'envie et de tout ce qui pourrait troubler ta paix.",
+  "Qu'Allah remplisse ta maison de bonheur, ton cœur de foi et tes mains de bien.",
+  "Que ce vendredi soit une protection pour toi jusqu'au prochain.",
+  "Qu'Allah bénisse ta famille en ce jour et fasse d'elle une source de joie pour toi.",
+  "Que la prospérité, la santé et la paix soient tes compagnes en ce jour béni.",
+  "Qu'Allah te donne le repos que tu mérites et la sérénité que tu cherches.",
+  "Que ce vendredi efface les fatigues, apaise les cœurs et rapproche ceux qui s'aiment.",
+  "Qu'Allah éloigne de ta maison la maladie, la discorde et le besoin.",
+  "Que ton cœur trouve en ce vendredi la paix que le monde ne peut pas donner.",
+  "Qu'Allah t'accorde un week-end doux, une santé solide et un travail béni.",
+  "Que la lumière de ce jour chasse toute ombre de ta vie.",
+  "Qu'Allah protège les tiens, guérisse les malades et console les cœurs tristes en ce jour béni.",
+  "Que ce vendredi t'apporte de bonnes nouvelles et éloigne de toi les mauvaises.",
+  "Qu'Allah fasse de ce jour un début de facilité après chaque difficulté.",
+  "Que ta gratitude de ce vendredi t'attire encore plus de bienfaits.",
+  "Qu'Allah bénisse ton repos, ta famille et tout ce que tu as gagné cette semaine.",
+  "Que ce vendredi apporte la guérison aux malades, le soulagement aux endettés et la paix aux cœurs.",
+  "Qu'Allah te comble de bien en ce jour béni et te préserve de tout ce qui te nuirait.",
 ];
 const defaultMondayBlessings = mondayBlessings.slice();
 const defaultFridayBlessings = fridayBlessings.slice();
@@ -788,6 +1430,7 @@ async function addLibMessage(){
 }
 async function editLibMessage(idx){
   const arr = getLibArray(libDay);
+  if(!await unlockGate('Modifier un message')) return;
   const updated = prompt('Modifier le message :', arr[idx]);
   if(updated === null) return;
   const trimmed = updated.trim();
@@ -799,6 +1442,7 @@ async function editLibMessage(idx){
 }
 async function deleteLibMessage(idx){
   const arr = getLibArray(libDay);
+  if(!await unlockGate('Supprimer un message')) return;
   if(arr.length <= 1){ showToast("Il faut garder au moins un message"); return; }
   if(!confirmTwice('lib'+libDay+idx, 'Tape encore ✕ pour supprimer ce message')) return;
   arr.splice(idx,1);
@@ -827,7 +1471,9 @@ async function loadAll(){
   renderContacts();
 }
 async function saveContacts(){
-  try{ await window.storage.set('contacts', JSON.stringify(contacts), false); }
+  // la coche de sélection est volontairement non enregistrée : elle ne dure que la session
+  const aEnregistrer = contacts.map(c=>{ const copie = Object.assign({}, c); delete copie.selected; return copie; });
+  try{ await window.storage.set('contacts', JSON.stringify(aEnregistrer), false); }
   catch(e){ showToast("Erreur de sauvegarde"); }
 }
 async function saveGroups(){
@@ -879,6 +1525,7 @@ async function addGroup(){
   renderGroups();
 }
 async function removeGroup(i){
+  if(!await unlockGate('Supprimer un groupe')) return;
   if(!confirmTwice('group'+groups[i].id, 'Tape encore ✕ pour supprimer ce groupe (ses proches iront dans « Tous »)')) return;
   const gid = groups[i].id;
   groups.splice(i,1);
@@ -925,6 +1572,7 @@ function renderContacts(){
 }
 async function editContact(i){
   const c = contacts[i];
+  if(!await unlockGate('Modifier un proche')) return;
   const newName = prompt('Nom :', c.name);
   if(newName === null) return;
   const newPhone = prompt('Téléphone :', c.phone);
@@ -964,6 +1612,8 @@ async function addContact(){
 }
 async function removeContact(i){
   const c = contacts[i];
+  if(!await unlockGate('Supprimer un proche')) return;
+  if(!confirmTwice('contact'+i, `Tape encore ✕ pour envoyer ${c ? c.name : 'ce proche'} à la corbeille`)) return;
   if(c) await trashItem('contact', c);
   contacts.splice(i,1);
   await saveContacts();
@@ -1077,16 +1727,15 @@ function renderPickList(){
     </div>
   `).join('');
   const n = contacts.filter(c=>c.selected).length;
-  document.getElementById('pickSendBtn').textContent = `🚀 Envoyer (${n})`;
+  document.getElementById('pickSendBtn').textContent = `🚀 Envoi guidé, un par un (${n})`;
+  document.getElementById('pickSmsBtn').textContent = `⚡ Un seul message (${n})`;
 }
-async function togglePick(i){
+function togglePick(i){
   contacts[i].selected = !contacts[i].selected;
-  await saveContacts();
   renderPickList();
 }
-async function clearSelection(){
+function clearSelection(){
   contacts.forEach(c=>c.selected=false);
-  await saveContacts();
   renderPickList();
 }
 function startGuidedSendSelection(){
@@ -1096,18 +1745,26 @@ function startGuidedSendSelection(){
   launchGuidedSend(list);
 }
 
-/* --- SMS groupé : un seul message pour tout le groupe --- */
-function sendGroupSms(){
-  const gid = document.getElementById('groupFilter').value;
-  let list = gid === 'all' ? contacts.slice() : contacts.filter(c=>c.groupId===gid);
+/* --- SMS groupé : un seul message, un seul tap --- */
+function sendGroupSmsList(list){
   const waCount = list.filter(c=>c.channel==='wa').length;
-  list = list.filter(c=>c.channel!=='wa');
-  if(list.length===0){ showToast("Aucun proche en SMS dans ce groupe (WhatsApp n'accepte pas l'envoi groupé par lien)"); return; }
+  const smsList = list.filter(c=>c.channel!=='wa');
+  if(smsList.length===0){ showToast("Aucun proche en SMS ici (WhatsApp n'accepte pas l'envoi groupé par lien)"); return; }
   const text = finalMessage(document.getElementById('blessingText').value);
-  const numbers = list.map(c=>cleanPhoneForSms(c.phone)).join(',');
-  list.forEach(c=>logSend(c.name, 'sms', 'ouvert'));
+  const numbers = smsList.map(c=>cleanPhoneForSms(c.phone)).join(',');
+  smsList.forEach(c=>logSend(c.name, 'sms', 'ouvert'));
   if(waCount>0) showToast(`${waCount} proche(s) WhatsApp non inclus — utilise l'envoi guidé pour eux`);
   window.location.href = `sms:${numbers}?&body=${encodeURIComponent(text)}`;
+}
+function sendGroupSms(){
+  const gid = document.getElementById('groupFilter').value;
+  sendGroupSmsList(gid === 'all' ? contacts.slice() : contacts.filter(c=>c.groupId===gid));
+}
+function sendGroupSmsSelection(){
+  const list = contacts.filter(c=>c.selected);
+  if(list.length===0){ showToast('Coche au moins un proche'); return; }
+  closePickOverlay();
+  sendGroupSmsList(list);
 }
 function showGuidedStep(){
   const c = guidedList[guidedIndex];
@@ -1142,13 +1799,15 @@ function closeOverlay(){ overlayOpen = false; document.getElementById('overlay')
 /* ---------- Water tracking ---------- */
 async function logWater(status){
   let log = [];
-  try{
-    const res = await window.storage.get('waterLog', false);
-    log = res && res.value ? JSON.parse(res.value) : [];
-  }catch(e){ log = []; }
-  log.unshift({ ts: new Date().toISOString(), status });
-  if(log.length > 500) log.length = 500;
-  try{ await window.storage.set('waterLog', JSON.stringify(log), false); }catch(e){}
+  await queueWrite(async ()=>{
+    try{
+      const res = await window.storage.get('waterLog', false);
+      log = res && res.value ? JSON.parse(res.value) : [];
+    }catch(e){ log = []; }
+    log.unshift({ ts: new Date().toISOString(), status });
+    if(log.length > 500) log.length = 500;
+    try{ await window.storage.set('waterLog', JSON.stringify(log), false); }catch(e){}
+  });
   const labels = {bu:"Bien joué, c'est noté ✓", reporte:"Reporté de 10 minutes ⏰", ignore:"Rappel ignoré, pas de souci"};
   showToast(labels[status]);
   updateWaterCount(log);
@@ -1200,19 +1859,22 @@ async function savePrefs(){
     soir: document.getElementById('timeSoir').value,
   };
   try{ await window.storage.set('waterPrefs', JSON.stringify(prefs), false); }catch(e){}
+  renderProgramme();
   showToast('Préférences enregistrées — dis-le-moi dans le chat pour sync avec tes rappels iPhone');
 }
 
 /* ---------- Send log ---------- */
 async function logSend(name, channel, status){
-  let log = [];
-  try{
-    const res = await window.storage.get('sendLog', false);
-    log = res && res.value ? JSON.parse(res.value) : [];
-  }catch(e){ log = []; }
-  log.unshift({ ts: new Date().toISOString(), name, channel, status: status || 'ouvert' });
-  if(log.length > 500) log.length = 500;
-  try{ await window.storage.set('sendLog', JSON.stringify(log), false); }catch(e){}
+  return queueWrite(async ()=>{
+    let log = [];
+    try{
+      const res = await window.storage.get('sendLog', false);
+      log = res && res.value ? JSON.parse(res.value) : [];
+    }catch(e){ log = []; }
+    log.unshift({ ts: new Date().toISOString(), name, channel, status: status || 'ouvert' });
+    if(log.length > 500) log.length = 500;
+    try{ await window.storage.set('sendLog', JSON.stringify(log), false); }catch(e){}
+  });
 }
 
 /* ---------- History ---------- */
@@ -1270,21 +1932,21 @@ function renderShoppingList(){ renderChecklist(shoppingItems, 'shoppingList', 't
 function renderTaskList(){ renderChecklist(tasks, 'taskList', 'toggleTask', 'removeTask', 'createTaskReminder'); }
 
 function pad2(n){ return n.toString().padStart(2,'0'); }
-function downloadICS(title, dateObj){
+function downloadICS(title, dateObj, rrule){
   const dt = `${dateObj.getFullYear()}${pad2(dateObj.getMonth()+1)}${pad2(dateObj.getDate())}T${pad2(dateObj.getHours())}${pad2(dateObj.getMinutes())}00`;
   const uid = 'sante-' + Date.now() + '@app';
-  const ics = [
+  const lines = [
     'BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Sante//FR','CALSCALE:GREGORIAN',
     'BEGIN:VEVENT',
     `UID:${uid}`,
     `DTSTAMP:${dt}`,
     `DTSTART:${dt}`,
     'DURATION:PT15M',
-    `SUMMARY:${title.replace(/[\r\n]/g,' ')}`,
-    'BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:Rappel','TRIGGER:PT0S','END:VALARM',
-    'END:VEVENT','END:VCALENDAR'
-  ].join('\r\n');
-  const blob = new Blob([ics], {type:'text/calendar'});
+    `SUMMARY:${title.replace(/[\r\n]/g,' ')}`
+  ];
+  if(rrule) lines.push('RRULE:' + rrule);
+  lines.push('BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:Rappel','TRIGGER:PT0S','END:VALARM','END:VEVENT','END:VCALENDAR');
+  const blob = new Blob([lines.join('\r\n')], {type:'text/calendar'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
@@ -1293,6 +1955,14 @@ function downloadICS(title, dateObj){
   a.click();
   document.body.removeChild(a);
   setTimeout(()=>URL.revokeObjectURL(url), 5000);
+}
+function createBackupReminder(){
+  const d = new Date();
+  const jours = (5 - d.getDay() + 7) % 7;      // prochain vendredi
+  d.setDate(d.getDate() + jours);
+  d.setHours(19, 0, 0, 0);
+  downloadICS('💾 Sauvegarder mes données Santé', d, 'FREQ=WEEKLY;BYDAY=FR');
+  showToast('Rappel hebdomadaire téléchargé — ouvre-le pour l\'ajouter au Calendrier');
 }
 function promptDateTime(defaultLabel){
   const dateStr = prompt(`Date du rappel pour "${defaultLabel}" (JJ/MM/AAAA) :`, new Date().toLocaleDateString('fr-FR'));
@@ -1378,6 +2048,7 @@ function clientTotals(clientId){
 }
 
 async function addSolarClient(){
+  if(!await unlockGate('Ajouter un client')) return;
   const input = document.getElementById('newClientName');
   const name = input.value.trim();
   if(!name){ showToast("Donne un nom de client"); return; }
@@ -1391,6 +2062,8 @@ async function addSolarClient(){
 }
 async function removeSolarClient(id){
   const client = solarClients.find(c=>c.id===id);
+  if(!await unlockGate('Supprimer un client')) return;
+  if(!confirmTwice('client'+id, `Tape encore ✕ pour envoyer ${client ? client.name : 'ce client'} à la corbeille`)) return;
   const lines = solarLines.filter(l=>l.clientId===id);
   const payments = solarPayments.filter(p=>p.clientId===id);
   if(client) await trashItem('client', {client, lines, payments});
@@ -1422,7 +2095,10 @@ function renderClientPicker(){
           <div class="row-name">${escapeHtml(c.name)}</div>
           <div class="row-sub">${t.reliquat >= 0 ? 'Doit : '+fmtFCFA(t.reliquat) : 'Avance : '+fmtFCFA(-t.reliquat)}</div>
         </div>
-        <button class="icon-btn danger" onclick="event.stopPropagation();removeSolarClient('${c.id}')">✕</button>
+        <div class="row-actions">
+          <button class="icon-btn blue" onclick="event.stopPropagation();editSolarClient('${c.id}')">✏️</button>
+          <button class="icon-btn danger" onclick="event.stopPropagation();removeSolarClient('${c.id}')">✕</button>
+        </div>
       </div>
     `;
   }).join('');
@@ -1442,6 +2118,13 @@ function renderClientAccount(){
 
   el.innerHTML = `
     <h2>📒 Compte de ${escapeHtml(client.name)}</h2>
+    <div class="time-row" style="margin-bottom:8px;">
+      <label style="min-width:auto;">Facture du</label>
+      <input type="date" id="invFrom" style="flex:1;background:rgba(246,241,228,0.08);border:1px solid rgba(246,241,228,0.2);border-radius:8px;color:var(--ivory);font-size:12px;padding:6px 8px;">
+      <label style="min-width:auto;">au</label>
+      <input type="date" id="invTo" style="flex:1;background:rgba(246,241,228,0.08);border:1px solid rgba(246,241,228,0.2);border-radius:8px;color:var(--ivory);font-size:12px;padding:6px 8px;">
+    </div>
+    <div class="section-sub" style="margin-bottom:8px;">Laisse vide pour facturer tout l'historique du client.</div>
     <div class="card-actions" style="margin-bottom:12px;">
       <button class="btn-gold" onclick="generateClientInvoice('${client.id}')">🧾 Facture client</button>
       <button class="btn-ghost" onclick="generateSupplierStatement('${client.id}')">🧾 Relevé fournisseur</button>
@@ -1462,21 +2145,21 @@ function renderClientAccount(){
         <option value="autre">🛠 Main d'œuvre — Autre</option>
       </select>
       <input type="text" id="lProduit" placeholder="Description (ex: Fil 2.5mm, Soudure portail...)">
-      <input type="number" id="lQuantite" placeholder="Quantité (ou heures / forfait = 1)">
-      <input type="number" id="lPuAchat" placeholder="Coût unitaire (fournisseur ou ouvrier payé)">
-      <input type="number" id="lPuVente" placeholder="Prix unitaire facturé au client">
+      <input type="text" inputmode="decimal" id="lQuantite" placeholder="Quantité (ou heures / forfait = 1)">
+      <input type="text" inputmode="decimal" id="lPuAchat" placeholder="Coût unitaire (fournisseur ou ouvrier payé)">
+      <input type="text" inputmode="decimal" id="lPuVente" placeholder="Prix unitaire facturé au client">
       <div class="channel-toggle" id="fournisseurToggle" style="align-self:flex-start;">
         <button class="on" data-val="paye" onclick="setFournisseurStatut('paye')">Coût payé</button>
         <button data-val="credit" onclick="setFournisseurStatut('credit')">Coût à crédit</button>
       </div>
-      <input type="number" id="lMontantPayeFournisseur" placeholder="Montant déjà versé (si à crédit)" style="display:none;">
+      <input type="text" inputmode="decimal" id="lMontantPayeFournisseur" placeholder="Montant déjà versé (si à crédit)" style="display:none;">
       <button class="btn-gold" onclick="addSolarLine()">Ajouter</button>
     </div>
 
     <h2 style="margin-top:16px;">Paiements reçus</h2>
     <div id="paymentList"></div>
     <div class="add-form">
-      <input type="number" id="pMontant" placeholder="Montant reçu (FCFA)">
+      <input type="text" inputmode="decimal" id="pMontant" placeholder="Montant reçu (FCFA)">
       <button class="btn-gold" onclick="addSolarPayment()">Enregistrer le paiement</button>
     </div>
   `;
@@ -1489,7 +2172,7 @@ function renderClientAccount(){
       const catLabels = {produit:'📦 Produit', soudure:'🔧 Soudure', electricite:'⚡ Électricité', autre:'🛠 Autre'};
       const catTag = `<span class="hist-tag warn">${catLabels[l.categorie]||'📦 Produit'}</span>`;
       return `<div class="hist-item">
-        <div class="hd"><span>${escapeHtml(l.produit)} · Qté ${l.quantite}</span>${catTag}</div>
+        <div class="hd"><span>${escapeHtml(l.produit)} · Qté ${l.quantite}${l.date ? ' · ' + new Date(l.date).toLocaleDateString('fr-FR') : ''}</span>${catTag}</div>
         Coût unit. ${fmtFCFA(l.puAchat)} · Prix unit. ${fmtFCFA(l.puVente)} · <b style="color:#E8C170;">Bénéfice ${fmtFCFA(benef)}</b> ${fournStatut}
         <div class="row-actions" style="margin-top:6px;">
           <button class="icon-btn blue" onclick="editSolarLine('${l.id}')">✏️</button>
@@ -1501,7 +2184,10 @@ function renderClientAccount(){
   document.getElementById('paymentList').innerHTML = payments.length===0 ? '<div class="empty">Aucun paiement encore.</div>' :
     payments.map(p=>`<div class="hist-item"><div class="hd"><span>${new Date(p.date).toLocaleDateString('fr-FR')}</span>
       <span class="hist-tag ok">${fmtFCFA(p.montant)}</span></div>
-      <button class="icon-btn danger" style="margin-top:6px;" onclick="deleteSolarPayment('${p.id}')">✕ Supprimer</button></div>`).join('');
+      <div class="row-actions" style="margin-top:6px;">
+        <button class="icon-btn blue" onclick="editSolarPayment('${p.id}')">✏️ Modifier</button>
+        <button class="icon-btn danger" onclick="deleteSolarPayment('${p.id}')">✕ Supprimer</button>
+      </div></div>`).join('');
 }
 
 let newLineFournisseurStatut = 'paye';
@@ -1512,58 +2198,178 @@ function setFournisseurStatut(val){
   if(mf) mf.style.display = val==='credit' ? 'block' : 'none';
 }
 
+/* Restitue ou consomme le stock pour une ligne produit ; utilisé à l'ajout,
+   la modification et la suppression, pour que le stock reste toujours juste. */
+async function releaseStockForLine(line, motif){
+  if(!line || line.categorie !== 'produit' || !line.quantite) return null;
+  const item = findStockByName(line.produit);
+  if(!item) return null;
+  item.quantite += line.quantite;
+  await saveStock();
+  await logStockMove(item, line.quantite, motif || 'Restitution');
+  return item;
+}
+async function consumeStockForLine(line, motif){
+  if(!line || line.categorie !== 'produit' || !line.quantite) return null;
+  const item = findStockByName(line.produit);
+  if(!item) return null;
+  item.quantite -= line.quantite;
+  await saveStock();
+  await logStockMove(item, -line.quantite, motif || 'Vente');
+  return item;
+}
+function stockMsgFor(item){
+  if(!item) return '';
+  return item.quantite < 0
+    ? ` · ⚠️ stock ${item.nom} négatif (${item.quantite})`
+    : ` · stock ${item.nom} : ${item.quantite}`;
+}
+
 async function addSolarLine(){
+  if(!await unlockGate('Ajouter un produit ou un paiement')) return;
   const categorie = document.getElementById('lCategorie').value;
   const produit = document.getElementById('lProduit').value.trim();
-  const quantite = parseFloat(document.getElementById('lQuantite').value) || 0;
-  const puAchat = parseFloat(document.getElementById('lPuAchat').value) || 0;
-  const puVente = parseFloat(document.getElementById('lPuVente').value) || 0;
-  const montantPayeFournisseur = parseFloat(document.getElementById('lMontantPayeFournisseur').value) || 0;
+  const quantite = parseNum(document.getElementById('lQuantite').value);
+  const puAchat = parseNum(document.getElementById('lPuAchat').value);
+  const puVente = parseNum(document.getElementById('lPuVente').value);
+  const montantPayeFournisseur = parseNum(document.getElementById('lMontantPayeFournisseur').value);
   if(!produit || !quantite || !puVente){ showToast("Remplis au moins la description, la quantité et le prix facturé"); return; }
-  solarLines.push({
+  if(quantite <= 0){ showToast('La quantité doit être supérieure à 0'); return; }
+  if(puAchat < 0 || puVente < 0){ showToast('Un montant ne peut pas être négatif'); return; }
+  const totalLigne = quantite * puVente;
+  if(totalLigne > 50000000 && !confirmTwice('bigline', `Montant inhabituel : ${fmtFCFA(totalLigne)} — tape encore pour confirmer`)) return;
+  const line = {
     id:'l'+Date.now(), clientId:selectedClientId, categorie, produit, quantite, puAchat, puVente,
     fournisseurStatut:newLineFournisseurStatut,
     montantPayeFournisseur: newLineFournisseurStatut==='credit' ? montantPayeFournisseur : quantite*puAchat,
     date:new Date().toISOString()
-  });
+  };
+  solarLines.push(line);
   await saveSolarLines();
+  const stockItem = await consumeStockForLine(line);
+  renderStock();
   renderClientAccount(); renderClientPicker(); updateSolarSummary();
-  showToast('Ajouté ✓');
+  let msg = (puVente < puAchat ? '⚠️ Ajouté — mais tu vends à perte' : 'Ajouté ✓') + stockMsgFor(stockItem);
+  if(!stockItem && categorie === 'produit' && solarStock.length > 0){
+    msg += ` · ℹ️ aucun article de stock nommé « ${produit} » — stock non modifié`;
+  }
+  showToast(msg);
 }
 async function deleteSolarLine(id){
+  if(!await unlockGate('Supprimer un produit')) return;
   if(!confirmTwice('line'+id, 'Tape encore ✕ pour supprimer ce produit (définitif)')) return;
+  const l = solarLines.find(l=>l.id===id);
+  const stockItem = l ? await releaseStockForLine(l, 'Suppression de vente') : null;
   solarLines = solarLines.filter(l=>l.id!==id);
   await saveSolarLines();
+  renderStock();
   renderClientAccount(); renderClientPicker(); updateSolarSummary();
+  showToast('Produit supprimé' + stockMsgFor(stockItem) + ' ✓');
 }
+let editingLineId = null;
 async function editSolarLine(id){
   const l = solarLines.find(l=>l.id===id);
+  if(!await unlockGate('Modifier un produit')) return;
   if(!l) return;
-  const produit = prompt('Produit :', l.produit); if(produit===null) return;
-  const quantite = prompt('Quantité :', l.quantite); if(quantite===null) return;
-  const puAchat = prompt("Prix unitaire d'achat :", l.puAchat); if(puAchat===null) return;
-  const puVente = prompt('Prix unitaire de vente :', l.puVente); if(puVente===null) return;
-  const montantPayeFournisseur = prompt('Montant versé au fournisseur :', l.montantPayeFournisseur); if(montantPayeFournisseur===null) return;
-  l.produit = produit.trim();
-  l.quantite = parseFloat(quantite)||0;
-  l.puAchat = parseFloat(puAchat)||0;
-  l.puVente = parseFloat(puVente)||0;
-  l.montantPayeFournisseur = parseFloat(montantPayeFournisseur)||0;
+  editingLineId = id;
+  document.getElementById('lineEditTitle').textContent = l.produit;
+  document.getElementById('eCategorie').value = l.categorie || 'produit';
+  document.getElementById('eProduit').value = l.produit;
+  document.getElementById('eQuantite').value = l.quantite;
+  document.getElementById('ePuAchat').value = l.puAchat;
+  document.getElementById('ePuVente').value = l.puVente;
+  document.getElementById('eMontantPaye').value = l.montantPayeFournisseur;
+  updateLineEditSummary();
+  ['eQuantite','ePuAchat','ePuVente','eMontantPaye'].forEach(idf=>{
+    document.getElementById(idf).oninput = updateLineEditSummary;
+  });
+  document.getElementById('lineOverlay').classList.add('show');
+}
+function updateLineEditSummary(){
+  const q = parseNum(document.getElementById('eQuantite').value);
+  const a = parseNum(document.getElementById('ePuAchat').value);
+  const v = parseNum(document.getElementById('ePuVente').value);
+  const paye = parseNum(document.getElementById('eMontantPaye').value);
+  const benef = q*v - q*a;
+  const reste = Math.max(0, q*a - paye);
+  const el = document.getElementById('eSummary');
+  el.style.background = benef < 0 ? 'rgba(181,101,79,0.3)' : 'rgba(217,164,65,0.18)';
+  el.textContent = `Total facturé ${fmtFCFA(q*v)} · Bénéfice ${fmtFCFA(benef)}${benef<0 ? ' ⚠️ tu vends à perte' : ''}${reste>0 ? ' · Reste dû au fournisseur '+fmtFCFA(reste) : ''}`;
+}
+function closeLineOverlay(){
+  editingLineId = null;
+  document.getElementById('lineOverlay').classList.remove('show');
+}
+async function saveLineEdit(){
+  const l = solarLines.find(l=>l.id===editingLineId);
+  if(!l){ closeLineOverlay(); return; }
+  const produit = document.getElementById('eProduit').value.trim();
+  if(!produit){ showToast('La description ne peut pas être vide'); return; }
+  const nQ = parseNum(document.getElementById('eQuantite').value);
+  const nA = parseNum(document.getElementById('ePuAchat').value);
+  const nV = parseNum(document.getElementById('ePuVente').value);
+  const nP = parseNum(document.getElementById('eMontantPaye').value);
+  if(nQ <= 0){ showToast('La quantité doit être supérieure à 0'); return; }
+  if(nA < 0 || nV < 0 || nP < 0){ showToast('Un montant ne peut pas être négatif'); return; }
+  if(nQ*nV > 50000000 && !confirmTwice('bigedit', `Montant inhabituel : ${fmtFCFA(nQ*nV)} — tape encore pour confirmer`)) return;
+  const oldLine = {categorie:l.categorie, produit:l.produit, quantite:l.quantite};
+  l.categorie = document.getElementById('eCategorie').value;
+  l.produit = produit;
+  l.quantite = nQ;
+  l.puAchat = nA;
+  l.puVente = nV;
+  l.montantPayeFournisseur = nP;
   l.fournisseurStatut = l.montantPayeFournisseur >= l.quantite*l.puAchat ? 'paye' : 'credit';
   await saveSolarLines();
+  await releaseStockForLine(oldLine, 'Correction (ancienne quantité restituée)');
+  const stockItem = await consumeStockForLine(l, 'Correction (nouvelle quantité)');
+  renderStock();
+  closeLineOverlay();
   renderClientAccount(); renderClientPicker(); updateSolarSummary();
-  showToast('Produit modifié ✓');
+  showToast('Produit modifié' + stockMsgFor(stockItem) + ' ✓');
 }
 
 async function addSolarPayment(){
-  const montant = parseFloat(document.getElementById('pMontant').value) || 0;
+  if(!await unlockGate('Ajouter un paiement')) return;
+  const montant = parseNum(document.getElementById('pMontant').value);
   if(!montant){ showToast("Indique un montant"); return; }
+  if(montant < 0){ showToast('Un paiement ne peut pas être négatif'); return; }
+  if(montant > 50000000 && !confirmTwice('bigpay', `Paiement inhabituel : ${fmtFCFA(montant)} — tape encore pour confirmer`)) return;
   solarPayments.push({id:'p'+Date.now(), clientId:selectedClientId, montant, date:new Date().toISOString()});
   await saveSolarPayments();
   renderClientAccount(); renderClientPicker(); updateSolarSummary();
   showToast('Paiement enregistré ✓');
 }
+async function editSolarClient(id){
+  const c = solarClients.find(c=>c.id===id);
+  if(!c) return;
+  if(!await unlockGate('Renommer un client')) return;
+  const val = prompt('Nom du client :', c.name);
+  if(val === null) return;
+  const nom = val.trim();
+  if(!nom){ showToast('Le nom ne peut pas être vide'); return; }
+  c.name = nom;
+  await saveSolarClients();
+  renderClientPicker(); renderClientAccount();
+  showToast('Client renommé ✓');
+}
+async function editSolarPayment(id){
+  const p = solarPayments.find(p=>p.id===id);
+  if(!p) return;
+  if(!await unlockGate('Modifier un paiement')) return;
+  const val = prompt('Montant reçu (FCFA) :', p.montant);
+  if(val === null) return;
+  const montant = parseNum(val);
+  if(!montant){ showToast('Indique un montant'); return; }
+  if(montant < 0){ showToast('Un paiement ne peut pas être négatif'); return; }
+  if(montant > 50000000 && !confirmTwice('bigpayedit', `Paiement inhabituel : ${fmtFCFA(montant)} — tape encore pour confirmer`)) return;
+  p.montant = montant;
+  await saveSolarPayments();
+  renderClientAccount(); renderClientPicker(); updateSolarSummary();
+  showToast('Paiement modifié ✓');
+}
 async function deleteSolarPayment(id){
+  if(!await unlockGate('Supprimer un paiement')) return;
   if(!confirmTwice('pay'+id, 'Tape encore ✕ pour supprimer ce paiement (définitif)')) return;
   solarPayments = solarPayments.filter(p=>p.id!==id);
   await saveSolarPayments();
@@ -1608,13 +2414,15 @@ function renderArticleSearch(){
 /* ---------- Sauvegarde minutieuse ---------- */
 const DATA_KEYS = ['contacts','groups','solarClients','solarLines','solarPayments',
   'shoppingList','taskList','libMonday','libFriday','waterLog','sendLog','usedIndexes',
-  'waterPrefs','defaultGroup','trash','currentBlessing','signature','salutation','seededDefaults'];
-const RAW_STRING_KEYS = ['defaultGroup','signature','salutation'];
+  'waterPrefs','defaultGroup','trash','currentBlessing','signature','salutation','seededDefaults',
+  'solarStock','stockMoves','prayerSettings','lastBackup'];
+const RAW_STRING_KEYS = ['defaultGroup','signature','salutation','lastBackup'];
 const KEY_TYPES = {
   contacts:'array', groups:'array', solarClients:'array', solarLines:'array', solarPayments:'array',
   shoppingList:'array', taskList:'array', libMonday:'array', libFriday:'array',
   waterLog:'array', sendLog:'array', trash:'array',
-  usedIndexes:'object', waterPrefs:'object', currentBlessing:'object', defaultGroup:'string', signature:'string', salutation:'string', seededDefaults:'object'
+  usedIndexes:'object', waterPrefs:'object', currentBlessing:'object', defaultGroup:'string', signature:'string', salutation:'string', seededDefaults:'object',
+  solarStock:'array', stockMoves:'array', prayerSettings:'object', lastBackup:'string'
 };
 function typeOk(key, val){
   const t = KEY_TYPES[key];
@@ -1674,6 +2482,7 @@ function downloadBlob(content, filename, mime){
   setTimeout(()=>URL.revokeObjectURL(url), 5000);
 }
 async function exportAllData(){
+  if(!await unlockGate('Exporter toutes tes données')) return;
   const data = await collectAllData();
   const backup = { app:'sante', format:2, exportedAt:new Date().toISOString(), counts:summarizeData(data), data };
   const json = JSON.stringify(backup, null, 2);
@@ -1741,6 +2550,7 @@ function closeRestoreOverlay(){
 }
 async function applyPendingRestore(){
   if(!pendingRestore) return;
+  if(!await unlockGate('Restaurer une sauvegarde')) return;
   const parsed = pendingRestore;
   pendingRestore = null;
   try{
@@ -1755,6 +2565,7 @@ async function applyPendingRestore(){
   }
 }
 async function undoLastRestore(){
+  if(!await unlockGate('Annuler une restauration')) return;
   if(!confirmTwice('undoRestore', "Tape encore pour revenir à l'état d'avant la restauration")) return;
   try{
     const r = await window.storage.get('preRestoreSnapshot', false);
@@ -1853,7 +2664,14 @@ async function loadTrash(){
   try{ const r = await window.storage.get('trash', false); trash = r&&r.value?JSON.parse(r.value):[]; }catch(e){ trash = []; }
   renderTrash();
 }
-async function saveTrash(){ try{ await window.storage.set('trash', JSON.stringify(trash), false); }catch(e){} }
+const TRASH_MAX = 50;
+const TRASH_DAYS = 90;
+async function saveTrash(){
+  const limite = Date.now() - TRASH_DAYS*24*60*60*1000;
+  trash = trash.filter(t=> !t.deletedAt || new Date(t.deletedAt).getTime() > limite);
+  if(trash.length > TRASH_MAX) trash.length = TRASH_MAX;
+  try{ await window.storage.set('trash', JSON.stringify(trash), false); }catch(e){}
+}
 
 async function trashItem(type, data){
   trash.unshift({id:'t'+Date.now(), type, data, deletedAt:new Date().toISOString()});
@@ -1879,6 +2697,7 @@ function renderTrash(){
 
 async function restoreTrashItem(id){
   const t = trash.find(t=>t.id===id);
+  if(!await unlockGate('Restaurer depuis la corbeille')) return;
   if(!t) return;
   if(t.type==='client'){
     solarClients.push(t.data.client);
@@ -1897,6 +2716,7 @@ async function restoreTrashItem(id){
   showToast('Restauré ✓');
 }
 async function purgeTrashItem(id){
+  if(!await unlockGate('Suppression définitive')) return;
   if(!confirmTwice('purge'+id, 'Tape encore pour supprimer définitivement (irrécupérable)')) return;
   trash = trash.filter(x=>x.id!==id);
   await saveTrash();
@@ -1932,27 +2752,53 @@ function invoiceStyleHead(title){
     @media print{ body{padding:10px;} }
   </style></head><body>`;
 }
+function invoicePeriod(){
+  const f = document.getElementById('invFrom'), t = document.getElementById('invTo');
+  const from = f && f.value ? new Date(f.value + 'T00:00:00') : null;
+  const to   = t && t.value ? new Date(t.value + 'T23:59:59') : null;
+  return {from, to, actif: !!(from || to)};
+}
+function inPeriod(dateStr, per){
+  if(!per.actif) return true;
+  if(!dateStr) return false;                       // ligne sans date : hors période datée
+  const d = new Date(dateStr);
+  if(per.from && d < per.from) return false;
+  if(per.to && d > per.to) return false;
+  return true;
+}
+function periodLabel(per){
+  if(!per.actif) return 'Toutes les opérations';
+  const f = per.from ? per.from.toLocaleDateString('fr-FR') : 'le début';
+  const t = per.to ? per.to.toLocaleDateString('fr-FR') : "aujourd'hui";
+  return `Période : du ${f} au ${t}`;
+}
 function generateClientInvoice(clientId){
   const client = solarClients.find(c=>c.id===clientId);
   if(!client) return;
-  const lines = solarLines.filter(l=>l.clientId===clientId);
-  const t = clientTotals(clientId);
+  const per = invoicePeriod();
+  const lines = solarLines.filter(l=>l.clientId===clientId && inPeriod(l.date, per));
+  const payments = solarPayments.filter(p=>p.clientId===clientId && inPeriod(p.date, per));
+  if(lines.length === 0){ showToast('Aucune vente sur cette période'); return; }
+  const totalVente = lines.reduce((s,l)=> s + l.quantite*l.puVente, 0);
+  const totalPaye = payments.reduce((s,p)=> s + p.montant, 0);
+  const solde = totalVente - totalPaye;
   const catLabels = {produit:'Produit', soudure:'Main d\'œuvre — Soudure', electricite:'Main d\'œuvre — Électricité', autre:'Main d\'œuvre — Autre'};
   const rows = lines.map(l=>`<tr>
+    <td>${l.date ? new Date(l.date).toLocaleDateString('fr-FR') : ''}</td>
     <td>${escapeHtml(l.produit)}</td><td>${catLabels[l.categorie]||'Produit'}</td>
     <td>${l.quantite}</td><td>${fmtFCFA(l.puVente)}</td><td>${fmtFCFA(l.quantite*l.puVente)}</td>
   </tr>`).join('');
   const html = invoiceStyleHead('Facture - '+client.name) + `
     <h1>FACTURE</h1>
-    <div class="sub">Client : ${escapeHtml(client.name)} · Date : ${new Date().toLocaleDateString('fr-FR')}</div>
-    <table><thead><tr><th>Description</th><th>Catégorie</th><th>Qté</th><th>Prix unit.</th><th>Total</th></tr></thead>
+    <div class="sub">Client : ${escapeHtml(client.name)} · Établie le ${new Date().toLocaleDateString('fr-FR')}<br>${periodLabel(per)}</div>
+    <table><thead><tr><th>Date</th><th>Description</th><th>Catégorie</th><th>Qté</th><th>Prix unit.</th><th>Total</th></tr></thead>
     <tbody>${rows}</tbody></table>
     <div class="totals">
-      <div><span>Total facturé</span><span>${fmtFCFA(t.totalVente)}</span></div>
-      <div><span>Déjà payé</span><span>${fmtFCFA(t.totalPaye)}</span></div>
-      <div class="grand"><span>Solde dû</span><span>${fmtFCFA(Math.max(0,t.reliquat))}</span></div>
+      <div><span>Total facturé</span><span>${fmtFCFA(totalVente)}</span></div>
+      <div><span>Déjà payé${per.actif ? ' (sur la période)' : ''}</span><span>${fmtFCFA(totalPaye)}</span></div>
+      <div class="grand"><span>${solde >= 0 ? 'Solde dû' : 'Avance du client'}</span><span>${fmtFCFA(Math.abs(solde))}</span></div>
     </div>
-    <div class="footer">Généré par Santé 🥃 · Pour obtenir un PDF : ouvre ce fichier puis Imprimer → Enregistrer en PDF.</div>
+    <div class="footer">Généré par Santé 💧 · Pour obtenir un PDF : ouvre ce fichier puis Imprimer → Enregistrer en PDF.</div>
   </body></html>`;
   downloadHTMLDoc(`Facture_${client.name.replace(/\s+/g,'_')}.html`, html);
   showToast('Facture téléchargée ✓');
@@ -1985,7 +2831,7 @@ function generateSupplierStatement(clientId){
       <div><span>Déjà versé</span><span>${fmtFCFA(totalVerse)}</span></div>
       <div class="grand"><span>Reste à payer au(x) fournisseur(s)/ouvrier(s)</span><span>${fmtFCFA(resteDu)}</span></div>
     </div>
-    <div class="footer">Généré par Santé 🥃 · Document interne, pas destiné au client. Pour obtenir un PDF : ouvre ce fichier puis Imprimer → Enregistrer en PDF.</div>
+    <div class="footer">Généré par Santé 💧 · Document interne, pas destiné au client. Pour obtenir un PDF : ouvre ce fichier puis Imprimer → Enregistrer en PDF.</div>
   </body></html>`;
   downloadHTMLDoc(`Releve_Fournisseur_${client.name.replace(/\s+/g,'_')}.html`, html);
   showToast('Relevé fournisseur téléchargé ✓');
@@ -2009,6 +2855,10 @@ async function init(){
   await loadChecklists();
   await loadSolarData();
   await loadTrash();
+  await loadStock();
+  await loadPrayerSettings();
+  renderProgramme();
+  await loadPin();
   updateWaterCount();
   await autoSnapshot();
   await renderBackupUI();
