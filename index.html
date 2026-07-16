@@ -230,6 +230,18 @@
         <option value="petit">Texte petit (laisse voir la photo)</option>
         <option value="grand">Texte grand</option>
       </select>
+      <div id="cropRow" style="display:none;">
+        <div class="section-sub" style="margin:6px 0 4px;">🎯 Cadrage de la photo — glisse pour remonter ou descendre ce qu'on voit :</div>
+        <div class="time-row" style="gap:10px;">
+          <label style="min-width:auto;font-size:11px;">Haut</label>
+          <input type="range" id="imgCrop" min="0" max="100" value="50" oninput="renderBlessingImage()" style="flex:1;accent-color:var(--gold);">
+          <label style="min-width:auto;font-size:11px;">Bas</label>
+        </div>
+        <div class="card-actions" style="margin-top:0;">
+          <button class="btn-ghost" style="flex:1;padding:8px;" onclick="setCrop(0)">😀 Voir le haut (visage)</button>
+          <button class="btn-ghost" style="flex:1;padding:8px;" onclick="setCrop(50)">Centrer</button>
+        </div>
+      </div>
       <button class="btn-gold" onclick="renderBlessingImage()">🖼 Créer l'image</button>
     </div>
     <canvas id="blessCanvas" style="width:100%;border-radius:12px;margin-top:12px;display:none;box-shadow:0 12px 30px rgba(0,0,0,0.3);"></canvas>
@@ -239,7 +251,7 @@
     </div>
 
     <h2 style="margin-top:22px;">📚 Gérer la bibliothèque</h2>
-    <div class="section-sub">Recherche, modifie ou supprime les messages lundi/vendredi.</div>
+    <div class="section-sub">Cherche un message et tape <b>✓ Utiliser</b> pour en faire le message du jour. Celui en cours est marqué ⭐.</div>
     <div class="tabs" style="grid-template-columns:1fr 1fr;margin-bottom:10px;">
       <div class="tab active" data-libday="monday" onclick="switchLibDay('monday')" style="padding:9px 6px;">Lundi</div>
       <div class="tab" data-libday="friday" onclick="switchLibDay('friday')" style="padding:9px 6px;">Vendredi</div>
@@ -452,7 +464,7 @@
     <div id="sendHistList"></div>
   </div>
 
-  <div class="footnote" style="margin-top:26px;">Santé · version 4.0 — carte compatible anciens iPhone</div>
+  <div class="footnote" style="margin-top:26px;">Santé · version 4.2 — choix du message dans la bibliothèque</div>
 </div>
 
 <div class="overlay" id="overlay">
@@ -1443,6 +1455,7 @@ function nextFromPool(){
   updatePoolInfo();
   renderContacts();
   renderPreview();
+  renderLibrary();
 }
 function updatePoolInfo(){
   const key = getPoolKeyForToday();
@@ -1474,7 +1487,15 @@ function chooseBackground(evt){
   const reader = new FileReader();
   reader.onload = ()=>{
     const img = new Image();
-    img.onload = ()=>{ bgImage = img; renderBlessingImage(); showToast('Fond appliqué ✓'); };
+    img.onload = ()=>{
+      bgImage = img;
+      const ligne = document.getElementById('cropRow');
+      if(ligne) ligne.style.display = 'block';
+      const s = document.getElementById('imgCrop');
+      if(s) s.value = 0;                       // par défaut : on garde le haut, là où sont les visages
+      renderBlessingImage();
+      showToast('Fond appliqué ✓ Glisse le cadrage si besoin');
+    };
     img.onerror = ()=> showToast('Image illisible');
     img.src = reader.result;
   };
@@ -1497,10 +1518,18 @@ function wrapLines(ctx, text, maxWidth){
   return lignes;
 }
 
+function setCrop(v){
+  const s = document.getElementById('imgCrop');
+  if(s){ s.value = v; renderBlessingImage(); }
+}
 function drawCoverImage(ctx, img){
   const r = Math.max(IMG_W/img.width, IMG_H/img.height);
   const w = img.width*r, h = img.height*r;
-  ctx.drawImage(img, (IMG_W-w)/2, (IMG_H-h)/2, w, h);
+  const s = document.getElementById('imgCrop');
+  const p = s ? (parseInt(s.value,10)||0)/100 : 0.5;   // 0 = on garde le haut, 1 = on garde le bas
+  const dy = (IMG_H - h) * p;                          // (IMG_H-h) est négatif : c'est ce qui dépasse
+  const dx = (IMG_W - w) / 2;
+  ctx.drawImage(img, dx, dy, w, h);
 }
 
 /* Coins arrondis : ctx.roundRect n'existe pas sur les Safari d'avant iOS 16,
@@ -1672,17 +1701,38 @@ function renderLibrary(){
   const arr = getLibArray(libDay);
   const q = (document.getElementById('libSearch').value||'').toLowerCase().trim();
   const el = document.getElementById('libraryList');
+  const actuel = (document.getElementById('blessingText')||{value:''}).value.trim();
   const matches = arr.map((text,idx)=>({text,idx})).filter(m=> !q || m.text.toLowerCase().includes(q));
   if(matches.length===0){ el.innerHTML = '<div class="empty">Aucun message trouvé.</div>'; return; }
-  el.innerHTML = matches.map(m=>`
-    <div class="row">
-      <div class="row-name" style="font-weight:400;font-size:12.5px;line-height:1.4;flex:1;">${escapeHtml(m.text)}</div>
+  el.innerHTML = matches.map(m=>{
+    const enCours = m.text.trim() === actuel;
+    return `
+    <div class="row" style="${enCours ? 'border-color:var(--gold);background:rgba(217,164,65,0.14);' : ''}">
+      <div class="row-name" style="font-weight:400;font-size:12.5px;line-height:1.4;flex:1;">${enCours ? '⭐ ' : ''}${escapeHtml(m.text)}</div>
       <div class="row-actions">
+        <button class="icon-btn" style="${enCours ? 'opacity:0.5;' : ''}" onclick="useLibMessage(${m.idx})">${enCours ? '✓ En cours' : '✓ Utiliser'}</button>
         <button class="icon-btn blue" onclick="editLibMessage(${m.idx})">✏️</button>
         <button class="icon-btn danger" onclick="deleteLibMessage(${m.idx})">✕</button>
       </div>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
+}
+async function useLibMessage(idx){
+  const arr = getLibArray(libDay);
+  const texte = arr[idx];
+  if(texte === undefined) return;
+  document.getElementById('blessingText').value = texte;
+  await saveCurrentBlessing(texte);
+  const used = usedIndexes[libDay] || [];
+  if(!used.includes(idx)){ used.push(idx); usedIndexes[libDay] = used; await saveUsed(); }
+  updatePoolInfo();
+  renderContacts();
+  renderPreview();
+  renderLibrary();
+  if(bgImage) renderBlessingImage();
+  const carte = document.getElementById('blessingText');
+  if(carte && carte.scrollIntoView) carte.scrollIntoView({behavior:'smooth', block:'center'});
+  showToast('Message du jour choisi ✓');
 }
 async function addLibMessage(){
   const input = document.getElementById('newLibMessage');
