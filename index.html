@@ -464,7 +464,7 @@
     <div id="sendHistList"></div>
   </div>
 
-  <div class="footnote" style="margin-top:26px;">Santé · version 4.2 — choix du message dans la bibliothèque</div>
+  <div class="footnote" style="margin-top:26px;">Santé · version 4.3 — restauration réparée</div>
 </div>
 
 <div class="overlay" id="overlay">
@@ -507,7 +507,7 @@
   </div>
 </div>
 
-<div class="overlay" id="recoveryOverlay">
+<div class="overlay" id="recoveryOverlay" style="z-index:65;">
   <div class="modal">
     <div class="progress">Code de secours</div>
     <div class="who" style="font-size:19px;">Note-le maintenant</div>
@@ -550,7 +550,7 @@
   </div>
 </div>
 
-<div class="overlay" id="pinOverlay">
+<div class="overlay" id="pinOverlay" style="z-index:70;">
   <div class="modal">
     <div class="progress">Verrouillage</div>
     <div class="who" style="font-size:20px;">Code requis</div>
@@ -1012,6 +1012,7 @@ function isUnlocked(){ return !pinHash || Date.now() < unlockedUntil; }
 function unlockGate(reason){
   if(isUnlocked()) return Promise.resolve(true);
   return new Promise(resolve=>{
+    if(pinResolve){ pinResolve(false); }   // une demande précédente restait en attente
     pinResolve = resolve;
     document.getElementById('pinReason').textContent = reason || 'Modification ou suppression protégée';
     document.getElementById('pinInput').value = '';
@@ -2929,7 +2930,7 @@ function closeRestoreOverlay(){
 }
 async function applyPendingRestore(){
   if(!pendingRestore) return;
-  if(!await unlockGate('Restaurer une sauvegarde')) return;
+  if(!await unlockGate('Entre ton code pour restaurer')) return;
   const parsed = pendingRestore;
   pendingRestore = null;
   try{
