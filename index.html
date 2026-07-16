@@ -217,8 +217,18 @@
       </label>
       <div class="section-sub" style="margin:0;">Sans photo, un fond doré est dessiné automatiquement. Utilise tes propres photos (fleurs, paysages…).</div>
       <select id="imgStyle" onchange="renderBlessingImage()" style="width:100%;padding:9px;">
-        <option value="sombre">Texte clair sur fond assombri</option>
+        <option value="sombre">Texte clair sur la photo</option>
         <option value="carte">Texte foncé sur carte ivoire</option>
+      </select>
+      <select id="imgPos" onchange="renderBlessingImage()" style="width:100%;padding:9px;">
+        <option value="bas">Texte en bas (garde le visage visible)</option>
+        <option value="haut">Texte en haut</option>
+        <option value="centre">Texte au centre</option>
+      </select>
+      <select id="imgSize" onchange="renderBlessingImage()" style="width:100%;padding:9px;">
+        <option value="moyen">Texte moyen</option>
+        <option value="petit">Texte petit (laisse voir la photo)</option>
+        <option value="grand">Texte grand</option>
       </select>
       <button class="btn-gold" onclick="renderBlessingImage()">🖼 Créer l'image</button>
     </div>
@@ -442,7 +452,7 @@
     <div id="sendHistList"></div>
   </div>
 
-  <div class="footnote" style="margin-top:26px;">Santé · version 3.8 — hors ligne & icône</div>
+  <div class="footnote" style="margin-top:26px;">Santé · version 4.0 — carte compatible anciens iPhone</div>
 </div>
 
 <div class="overlay" id="overlay">
@@ -1493,16 +1503,57 @@ function drawCoverImage(ctx, img){
   ctx.drawImage(img, (IMG_W-w)/2, (IMG_H-h)/2, w, h);
 }
 
+/* Coins arrondis : ctx.roundRect n'existe pas sur les Safari d'avant iOS 16,
+   où le style « carte » plantait sans produire aucune image. */
+function pathArrondi(ctx, x, y, w, h, r){
+  if(typeof ctx.roundRect === 'function'){ ctx.roundRect(x, y, w, h, r); return; }
+  r = Math.min(r, w/2, h/2);
+  ctx.moveTo(x+r, y);
+  ctx.arcTo(x+w, y,   x+w, y+h, r);
+  ctx.arcTo(x+w, y+h, x,   y+h, r);
+  ctx.arcTo(x,   y+h, x,   y,   r);
+  ctx.arcTo(x,   y,   x+w, y,   r);
+  ctx.closePath();
+}
+
 function renderBlessingImage(){
   const canvas = document.getElementById('blessCanvas');
   canvas.width = IMG_W; canvas.height = IMG_H;
   const ctx = canvas.getContext('2d');
   const style = document.getElementById('imgStyle').value;
+  const pos = document.getElementById('imgPos').value;
+  const taillePref = document.getElementById('imgSize').value;
   const corps = stripName(document.getElementById('blessingText').value, !!(salutation||'').trim());
   const sal = (salutation||'').trim();
   const sig = (signature||'').trim();
+  const carte = style === 'carte';
 
-  // Fond
+  // --- 1. Mesurer le bloc de texte AVANT de dessiner ---
+  const maxW = IMG_W - (carte ? 260 : 170);
+  const depart = {petit:44, moyen:58, grand:74}[taillePref] || 58;
+  const hauteurMax = IMG_H * (taillePref==='grand' ? 0.62 : 0.52);
+  let taille = depart, lignes = [];
+  for(; taille >= 30; taille -= 2){
+    ctx.font = '500 ' + taille + 'px Fraunces, Georgia, serif';
+    lignes = wrapLines(ctx, corps, maxW);
+    if(lignes.length * taille * 1.45 <= hauteurMax) break;
+  }
+  const tailleSal = Math.round(taille * 1.05);
+  const tailleSig = Math.round(taille * 0.9);
+  const hSal  = sal ? tailleSal + 50 : 20;
+  const hCorps = lignes.length * taille * 1.45;
+  const hSig  = (sig ? tailleSig + 30 : 0) + 46;
+  const hBloc = hSal + hCorps + hSig;
+
+  const marge = 130;
+  let blocTop;
+  if(pos === 'haut')        blocTop = marge;
+  else if(pos === 'centre') blocTop = (IMG_H - hBloc)/2;
+  else                      blocTop = IMG_H - hBloc - marge;
+  blocTop = Math.max(60, Math.min(blocTop, IMG_H - hBloc - 60));
+  const blocBas = blocTop + hBloc;
+
+  // --- 2. Fond ---
   if(bgImage){
     drawCoverImage(ctx, bgImage);
   }else{
@@ -1517,61 +1568,61 @@ function renderBlessingImage(){
     ctx.restore();
   }
 
-  const carte = style === 'carte';
+  // --- 3. Assombrir SEULEMENT derrière le texte : la photo reste visible ailleurs ---
   if(carte){
-    if(bgImage){ ctx.fillStyle = 'rgba(0,0,0,0.35)'; ctx.fillRect(0,0,IMG_W,IMG_H); }
-    ctx.fillStyle = 'rgba(246,241,228,0.96)';
-    const m = 70, y0 = 200, h = IMG_H - 400;
-    ctx.beginPath(); ctx.roundRect(m, y0, IMG_W-2*m, h, 34); ctx.fill();
-    ctx.strokeStyle = '#D9A441'; ctx.lineWidth = 6;
-    ctx.beginPath(); ctx.roundRect(m+18, y0+18, IMG_W-2*m-36, h-36, 22); ctx.stroke();
+    const m = 60, y0 = blocTop - 45, h = hBloc + 80;
+    ctx.fillStyle = 'rgba(246,241,228,0.95)';
+    ctx.beginPath(); pathArrondi(ctx, m, y0, IMG_W-2*m, h, 34); ctx.fill();
+    ctx.strokeStyle = '#D9A441'; ctx.lineWidth = 5;
+    ctx.beginPath(); pathArrondi(ctx, m+16, y0+16, IMG_W-2*m-32, h-32, 22); ctx.stroke();
+  }else if(bgImage){
+    const fondu = 150;
+    const o = ctx.createLinearGradient(0, Math.max(0, blocTop-fondu), 0, Math.min(IMG_H, blocBas+fondu));
+    o.addColorStop(0,   'rgba(8,12,26,0)');
+    o.addColorStop(0.28,'rgba(8,12,26,0.78)');
+    o.addColorStop(0.72,'rgba(8,12,26,0.78)');
+    o.addColorStop(1,   'rgba(8,12,26,0)');
+    ctx.fillStyle = o;
+    ctx.fillRect(0, Math.max(0, blocTop-fondu), IMG_W, Math.min(IMG_H, blocBas+fondu) - Math.max(0, blocTop-fondu));
   }else{
-    const o = ctx.createLinearGradient(0,0,0,IMG_H);
-    o.addColorStop(0,'rgba(10,14,30,0.72)'); o.addColorStop(0.5,'rgba(10,14,30,0.55)'); o.addColorStop(1,'rgba(10,14,30,0.8)');
-    ctx.fillStyle = o; ctx.fillRect(0,0,IMG_W,IMG_H);
+    ctx.fillStyle = 'rgba(10,14,30,0.45)';
+    ctx.fillRect(0,0,IMG_W,IMG_H);
   }
 
+  // --- 4. Texte ---
   const encre = carte ? '#241F1A' : '#F6F1E4';
   const or = carte ? '#B5654F' : '#EFCB7C';
   ctx.textAlign = 'center';
-  if(!carte){ ctx.shadowColor = 'rgba(0,0,0,0.55)'; ctx.shadowBlur = 18; ctx.shadowOffsetY = 3; }
+  ctx.textBaseline = 'alphabetic';
+  if(!carte){ ctx.shadowColor = 'rgba(0,0,0,0.6)'; ctx.shadowBlur = 16; ctx.shadowOffsetY = 2; }
 
-  // Salutation
-  let y = carte ? 340 : 300;
+  let y = blocTop + (sal ? tailleSal : 0);
   if(sal){
-    ctx.font = '600 62px Fraunces, Georgia, serif';
+    ctx.font = '600 ' + tailleSal + 'px Fraunces, Georgia, serif';
     ctx.fillStyle = or;
     ctx.fillText(sal, IMG_W/2, y);
-    y += 40;
+    y += 26;
+    ctx.strokeStyle = or; ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.moveTo(IMG_W/2-100, y); ctx.lineTo(IMG_W/2+100, y); ctx.stroke();
+    y += 24;
   }
-  // Filet
-  ctx.strokeStyle = or; ctx.lineWidth = 4; ctx.beginPath();
-  ctx.moveTo(IMG_W/2-110, y); ctx.lineTo(IMG_W/2+110, y); ctx.stroke();
-  y += 90;
-
-  // Corps : taille adaptée à la longueur
-  const maxW = IMG_W - (carte ? 260 : 170);
-  let taille = 58;
-  let lignes = [];
-  for(; taille >= 34; taille -= 2){
-    ctx.font = '500 ' + taille + 'px Fraunces, Georgia, serif';
-    lignes = wrapLines(ctx, corps, maxW);
-    if(lignes.length * taille * 1.45 < (carte ? 600 : 700)) break;
-  }
+  y += taille;
+  ctx.font = '500 ' + taille + 'px Fraunces, Georgia, serif';
   ctx.fillStyle = encre;
   lignes.forEach(l=>{ ctx.fillText(l, IMG_W/2, y); y += taille*1.45; });
 
-  // Signature
-  ctx.shadowBlur = carte ? 0 : 12;
+  y += 10;
   if(sig){
-    ctx.font = 'italic 600 52px Fraunces, Georgia, serif';
+    ctx.font = 'italic 600 ' + tailleSig + 'px Fraunces, Georgia, serif';
     ctx.fillStyle = or;
-    ctx.fillText(sig, IMG_W/2, carte ? IMG_H-300 : IMG_H-220);
+    ctx.fillText(sig, IMG_W/2, y + tailleSig);
+    y += tailleSig + 26;
   }
-  ctx.font = '400 30px Work Sans, sans-serif';
-  ctx.fillStyle = carte ? 'rgba(36,31,26,0.45)' : 'rgba(246,241,228,0.5)';
+  ctx.shadowBlur = carte ? 0 : 10;
+  ctx.font = '400 28px Work Sans, sans-serif';
+  ctx.fillStyle = carte ? 'rgba(36,31,26,0.45)' : 'rgba(246,241,228,0.62)';
+  ctx.fillText(dayLabel() + ' ' + new Date().toLocaleDateString('fr-FR'), IMG_W/2, y + 22);
   ctx.shadowBlur = 0;
-  ctx.fillText(dayLabel() + ' ' + new Date().toLocaleDateString('fr-FR'), IMG_W/2, carte ? IMG_H-240 : IMG_H-150);
 
   canvas.style.display = 'block';
   document.getElementById('imgActions').style.display = 'flex';
